@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/pagination.html' import render_pagination %}
+{% block title %}{% trans %}Search results{% endtrans %}{% endblock %}
+
+
+{% block content %}
+<div class="row home__featured">
+  <div class="col-12">
+    {% if query and pagination.items %}
+    <div class="row">
+      {% include "products/_items.html" %}
+    </div>
+    <div class="row">
+      <div class="m-auto">
+        {{ render_pagination(pagination) }}
+      </div>
+    </div>
+    {% else %}
+    <div class="row no-results">
+      <div class="col-12">
+        <h2>{% trans %}Search{% endtrans %}:<strong>{{ query }}</strong></h2>
+        <svg data-src="{{ url_for('static', filename='img/no-results-bg.svg') }}" width="360" height="360"></svg>
+        <p>{% trans %}Sorry, no matches found for your request.{% endtrans %}</p>
+        <p>{% trans %}Try again or shop new arrivals.{% endtrans %}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}

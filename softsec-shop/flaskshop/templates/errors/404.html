@@ -1,0 +1,14 @@
+
+{% extends "base.html" %}
+
+{% block page_title %}{% trans %}Page Not Found{% endtrans %}{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <div class="text-center">
+        <h1>404</h1>
+        <p>{% trans %}Sorry, that page doesn't exist.{% endtrans %}</p>
+        <p>{% trans %}Want to{% endtrans %} <a href="{{ url_for('public.home') }}">{% trans %}go home{% endtrans %}</a> {% trans %}instead{% endtrans %}?</p>
+    </div>
+</div>
+{% endblock %}

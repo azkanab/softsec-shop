@@ -1,0 +1,11 @@
+<svg width="300" height="102" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="102" fill="white" fill-opacity="0.0"/>
+  <text x="50%" y="44%" dominant-baseline="middle" text-anchor="middle"
+        font-size="48" fill="#ffffff" font-family="Segoe UI, sans-serif" font-weight="bold">
+    Softsec
+  </text>
+  <text x="50%" y="82%" dominant-baseline="middle" text-anchor="middle"
+        font-size="36" fill="#3ee7cd" font-family="Segoe UI, sans-serif">
+    Shop
+  </text>
+</svg>

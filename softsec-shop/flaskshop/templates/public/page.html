@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ page.title }}
+{% endblock %}
+
+
+
+{% block breadcrumb %}
+<ul class="breadcrumbs list-unstyled">
+  <li>
+    <a href="{{ url_for('public.home') }}">
+      {% trans %}Home{% endtrans %}
+    </a>
+  </li>
+  {% if page %}
+  <li>
+    <a href="{{ page.get_absolute_url() }}">{{ page.title }}</a>
+  </li>
+  {% endif %}
+</ul>
+{% endblock breadcrumb %}
+
+{% block content %}
+{% if not page.is_visible %}
+<div class="alert alert-warning" role="alert">
+  <strong>{% trans %}Warning!{% endtrans %}</strong>
+  {% trans %}You are previewing a page that is not visible.{% endtrans %}
+</div>
+{% else %}
+<div class="">
+  {{ page.content|safe }}
+</div>
+{% endif %}
+{% endblock %}
