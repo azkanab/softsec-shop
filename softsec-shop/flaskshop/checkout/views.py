@@ -20,26 +20,63 @@ def cart_index():
     return render_template("checkout/cart.html")
 
 
+# def update_cartline(id):
+#     # TODO when not enough stock, response ajax error
+#     line = CartLine.get_by_id(id)
+#     response = {
+#         "variantId": line.variant_id,
+#         "subtotal": 0,
+#         "total": 0,
+#         "cart": {"numItems": 0, "numLines": 0},
+#     }
+
+#     line.quantity = int(request.form["quantity"])
+#     line.save()
+
+#     cart = Cart.query.filter(Cart.user_id == current_user.id).first()
+#     response["cart"]["numItems"] = cart.update_quantity()
+#     response["cart"]["numLines"] = len(cart)
+#     response["subtotal"] = "$" + str(line.subtotal)
+#     response["total"] = "$" + str(cart.total)
+#     return jsonify(response)
+
+# task 1.2
 def update_cartline(id):
-    # TODO when not enough stock, response ajax error
     line = CartLine.get_by_id(id)
+    cart = Cart.query.filter(Cart.user_id == current_user.id).first() 
+
+    # --- 1. SAFELY GET AND VALIDATE INPUT ---
+    try:
+        quantity = int(request.form["quantity"])
+    except (TypeError, ValueError):
+        return jsonify({"error": "Invalid quantity format."}), 400
+
+    if quantity < 0:
+        # Reject negative quantity (Critical Fix)
+        return jsonify({"error": "Quantity cannot be negative"}), 400
+    
+    if quantity == 0:
+        # If quantity is 0, delete the cart line
+        line_subtotal = 0 # Subtotal of the line being deleted
+        line.delete()
+    else:
+        line.quantity = quantity 
+        line.save()
+        line_subtotal = line.subtotal
+
+
+    cart.update_quantity() 
+
     response = {
-        "variantId": line.variant_id,
-        "subtotal": 0,
-        "total": 0,
-        "cart": {"numItems": 0, "numLines": 0},
+        "variantId": line.variant_id, 
+        "subtotal": "$" + str(line_subtotal), 
+        "total": "$" + str(cart.total),
+        "cart": {
+            "numItems": cart.num_items, # Assuming Cart has a num_items property
+            "numLines": len(cart.lines) # Assuming Cart has a lines property
+        },
     }
-
-    line.quantity = int(request.form["quantity"])
-    line.save()
-
-    cart = Cart.query.filter(Cart.user_id == current_user.id).first()
-    response["cart"]["numItems"] = cart.update_quantity()
-    response["cart"]["numLines"] = len(cart)
-    response["subtotal"] = "$" + str(line.subtotal)
-    response["total"] = "$" + str(cart.total)
     return jsonify(response)
-
 
 @profile.exempt
 def checkout_shipping():
@@ -88,6 +125,11 @@ def checkout_note():
         else None
     )
     if form.validate_on_submit():
+        # *** Task 1.2 checkout if cart is empty or quantity is zero/negative ***
+        if cart.quantity <= 0:
+            flash(lazy_gettext("Your cart is empty and cannot be checked out."), "warning")
+            return redirect(url_for("checkout.cart_index"))
+        # *************************************************************************
         order, msg = Order.create_whole_order(cart, form.note.data)
         if order:
             return redirect(order.get_absolute_url())

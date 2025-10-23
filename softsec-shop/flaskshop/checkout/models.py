@@ -48,6 +48,11 @@ class Cart(Model):
 
     @classmethod
     def add_to_currentuser_cart(cls, quantity, variant_id):
+        # *** Task 1.2 prevent a user to checkout q ≤ 0 items ***
+        if quantity <= 0:
+            flash(f"Cannot add quantity of {quantity} to cart.", "warning")
+            return
+        # ********************************************************
         cart = cls.get_current_user_cart()
         variant = ProductVariant.get_by_id(variant_id)
         result, msg = variant.check_enough_stock(quantity)
