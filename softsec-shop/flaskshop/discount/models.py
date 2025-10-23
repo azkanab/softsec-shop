@@ -15,7 +15,7 @@ class Voucher(Model):
     __tablename__ = "discount_voucher"
     type_ = Column("type", db.Integer())
     title = Column(db.String(255))
-    code = Column(db.String(16), unique=True)
+    code = Column(db.String(16), unique=True)    
     usage_limit = Column(db.Integer())
     used = Column(db.Integer(), default=0)
     start_date = Column(db.Date())
@@ -48,10 +48,18 @@ class Voucher(Model):
         return ""
 
     @classmethod
+    # def generate_code(cls):
+    #     code = "".join(random.choices(string.ascii_uppercase, k=16))
+    #     exist = cls.query.filter_by(code=code).first()
+    #     return code
+    
     def generate_code(cls):
-        code = "".join(random.choices(string.ascii_uppercase, k=16))
-        exist = cls.query.filter_by(code=code).first()
-        return code
+        # task 1.4 Logical check to ensure code is unique before returning
+        while True:
+            code = "".join(random.choices(string.ascii_uppercase, k=16))
+            exist = cls.query.filter_by(code=code).first()
+            if not exist:
+                return code
 
     def check_available(self, cart=None):
         if self.start_date and self.start_date > datetime.date(datetime.now()):
