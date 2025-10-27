@@ -127,13 +127,27 @@ class Voucher(Model):
                 cart.get_category_price(self.category_id)
             )
         return 0
-
+    #####Task1.3
     def get_voucher_from_price(self, price):
         if self.discount_value_type == DiscountValueTypeKinds.fixed.value:
-            return self.discount_value
+        # Prevent discount from exceeding the price with fixed value
+            discount = min(self.discount_value, price)
+            return Decimal(discount).quantize(Decimal("0.00"))
         elif self.discount_value_type == DiscountValueTypeKinds.percent.value:
-            price = price * self.discount_value / 100
-            return Decimal(price).quantize(Decimal("0.00"))
+            discount = price * self.discount_value / 100
+        # Prevent discount from excedding the price with decimal value 
+            discount = min(discount, price)
+            return Decimal(discount).quantize(Decimal("0.00"))
+
+
+    #def get_voucher_from_price(self, price):
+    #    if self.discount_value_type == DiscountValueTypeKinds.fixed.value:
+    #        return self.discount_value
+    #    elif self.discount_value_type == DiscountValueTypeKinds.percent.value:
+    #        price = price * self.discount_value / 100
+    #        return Decimal(price).quantize(Decimal("0.00"))
+        
+
 
 
 class Sale(Model):
