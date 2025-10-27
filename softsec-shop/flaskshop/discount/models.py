@@ -62,14 +62,23 @@ class Voucher(Model):
                 return code
 
     def check_available(self, cart=None):
-        if self.start_date and self.start_date > datetime.date(datetime.now()):
-            raise Exception("The voucher code can not use now, please retry later")
-        if self.end_date and self.end_date < datetime.date(datetime.now()):
-            raise Exception("The voucher code has expired")
+        self.check_available_by_usage_limit()
+        self.check_available_by_date()
         if cart:
             self.check_available_by_cart(cart)
 
         return True
+
+    def check_available_by_date(self):
+        if self.start_date and self.start_date > datetime.date(datetime.now()):
+            raise Exception("The voucher code can not use now, please retry later")
+        if self.end_date and self.end_date < datetime.date(datetime.now()):
+            raise Exception("The voucher code has expired")
+    
+    def check_available_by_usage_limit(self):
+        remaining_usage = self.usage_limit - self.used
+        if remaining_usage <= 0:
+            raise Exception("The voucher is no longer available")
 
     def check_available_by_cart(self, cart):
         if self.type_ == VoucherTypeKinds.value.value:
