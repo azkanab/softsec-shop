@@ -47,6 +47,11 @@ def vouchers_manage(id=None):
 
     if form.validate_on_submit():
         form.populate_obj(voucher)
+        isExisting = Voucher.get_by_code(form.code.data)
+        if isExisting:
+            new_code = Voucher.generate_code()
+            form.code.data = new_code
+            voucher.code = new_code
         voucher.save()
         flash(lazy_gettext("Voucher saved."), "success")
         return redirect(url_for("dashboard.vouchers"))
