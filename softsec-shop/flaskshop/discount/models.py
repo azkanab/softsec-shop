@@ -47,12 +47,12 @@ class Voucher(Model):
             )
         return ""
 
-    @classmethod
     # def generate_code(cls):
     #     code = "".join(random.choices(string.ascii_uppercase, k=16))
     #     exist = cls.query.filter_by(code=code).first()
     #     return code
     
+    @classmethod
     def generate_code(cls):
         # task 1.4 Logical check to ensure code is unique before returning
         while True:
