@@ -29,6 +29,16 @@ def vouchers():
     }
     return render_template("dashboard/general_list.html", **context)
 
+# Task 1.4 No Duplicate Code
+def should_generate_new_code(id, voucher, form):
+    existing_voucher = Voucher.get_by_code(form.code.data)
+    # Edit
+    if id:
+        old_code = voucher.code
+        return existing_voucher and form.code.data != old_code
+    else: # Create
+        return existing_voucher
+
 
 def vouchers_manage(id=None):
     if id:
@@ -46,12 +56,11 @@ def vouchers_manage(id=None):
     form.type_.choices = [(k.value, k.name) for k in VoucherTypeKinds]
 
     if form.validate_on_submit():
-        form.populate_obj(voucher)
-        isExisting = Voucher.get_by_code(form.code.data)
-        if isExisting:
+        # Task 1.4 No Duplicate Code
+        if should_generate_new_code(id, voucher, form):
             new_code = Voucher.generate_code()
             form.code.data = new_code
-            voucher.code = new_code
+        form.populate_obj(voucher)
         voucher.save()
         flash(lazy_gettext("Voucher saved."), "success")
         return redirect(url_for("dashboard.vouchers"))

@@ -62,6 +62,7 @@ class Voucher(Model):
                 return code
 
     def check_available(self, cart=None):
+        # Task 1.5 Voucher Code Usage Limit
         self.check_available_by_usage_limit()
         self.check_available_by_date()
         if cart:
