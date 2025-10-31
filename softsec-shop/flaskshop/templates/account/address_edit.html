@@ -26,6 +26,8 @@
 <div class="row account__address-edit">
     <div class="col-sm-8 col-lg-6 m-auto">
         <form method="post" novalidate>
+            <!-- Task 2.1. Put CSRF token in the form -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <h2 class="text-center">
                 {% if address_id %}{% trans %}Edit address{% endtrans %}{% else %}{% trans %}New address{% endtrans %}{%
                 endif %}
