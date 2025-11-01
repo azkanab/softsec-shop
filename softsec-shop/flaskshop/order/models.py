@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from flask import url_for, current_app
+from flask import url_for
 from flask_login import current_user
 
 from flaskshop.account.models import User, UserAddress
