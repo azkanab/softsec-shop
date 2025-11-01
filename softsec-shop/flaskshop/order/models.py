@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from flask import url_for
+from flask import url_for, current_app
 from flask_login import current_user
 
 from flaskshop.account.models import User, UserAddress
@@ -21,7 +21,9 @@ from flaskshop.product.models import ProductVariant
 class Order(Model):
     __tablename__ = "order_order"
     token = Column(db.String(100), unique=True)
-    shipping_address = Column(db.String(255))
+    # Task 2.2. Save the address as UserAddress instead of HTML string
+    shipping_address_id = Column(db.Integer(), db.ForeignKey("account_address.id"))
+    shipping_address = db.relationship("UserAddress")
     user_id = Column(db.Integer())
     total_net = Column(db.DECIMAL(10, 2))
     discount_amount = Column(db.DECIMAL(10, 2), default=0)
@@ -83,8 +85,8 @@ class Order(Model):
                 shipping_method_price = shipping_method.price
                 shipping_address = UserAddress.get_by_id(
                     cart.shipping_address_id
-                ).full_address
-
+                )
+            
             order = cls.create(
                 user_id=current_user.id,
                 token=str(uuid4()),
