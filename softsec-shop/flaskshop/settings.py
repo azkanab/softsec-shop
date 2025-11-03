@@ -49,6 +49,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DATABASE_QUERY_TIMEOUT = 0.1  # log the slow database query, and unit is second
     SQLALCHEMY_RECORD_QUERIES = True
+    SQLALCHEMY_ECHO = True
 
     # Dir
     APP_DIR = Path(__file__).parent  # This directory

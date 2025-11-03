@@ -30,7 +30,7 @@ def style():
 
 def favicon():
     return send_from_directory("static", "favicon-32x32.png")
-
+print("DEBUG: search() triggered!", flush=True)
 def search():
     print("invoke search()")
     query = request.args.get("q", "")
@@ -45,6 +45,7 @@ def search():
         total = 100 # TODO: Fix this static value with dynamic value
         # Get paginated results with product images
         offset = (page - 1) * per_page
+        
         sql = text(f"""
             SELECT p.*, 
                    (SELECT image FROM product_image WHERE product_id = p.id LIMIT 1) as first_image
@@ -53,10 +54,38 @@ def search():
             ORDER BY p.id
             LIMIT {per_page} OFFSET {offset}
         """)
+        ###to check the sql in the output the values entering to query from search bar
+        print(":::MY_DEBUG_SQL:: START", flush=True)
+        print(sql.text, flush=True)
+        print(":::MY_DEBUG_SQL:: END", flush=True)
         offset = db.session.execute(sql)
+
+        #IMPLEMENTING PARAMETERIZED TEXT
+        #sql = text("""
+        #    SELECT p.*,
+        #           (SELECT image FROM product_image WHERE product_id = p.id LIMIT 1) AS first_image
+        #    FROM product_product p
+        #    WHERE p.title LIKE :q
+        #    ORDER BY p.id
+        #    LIMIT :limit OFFSET :offset
+        #    """)
+#
+        #params = {"q": f"%{query}%", "limit": per_page, "offset": offset}
+        #        # DEBUG prints (optional)
+#
+        #print(":::MY_DEBUG_SQL:: START", flush=True)
+        #print(sql.text, flush=True)            # shows the SQL template (placeholders)
+        #print(":::MY_DEBUG_SQL:: PARAMS", flush=True)
+        #print(params, flush=True)              # shows bound parameter values
+        #print(":::MY_DEBUG_SQL:: END", flush=True)
+#
+        ## Execute safely with bound parameterS
+        #result = db.session.execute(sql, params)
+#
         
         # Convert to proper product objects with required properties
         pagei = []
+        #for row in result.mappings():
         for row in offset.mappings():
             it = dict(row)
             # Add properties that the template expects
