@@ -85,8 +85,27 @@ def set_password():
         flash_errors(form)
     return redirect(url_for("account.index"))
 
+# task 2.4.a vulnerable
+# def view_profile(user_id):
+#     user = User.get_by_id(user_id)
+#     if not user:
+#         flash("User not found", "error")
+#         return redirect(url_for("public.home"))
+    
+#     return render_template('account/profile.html', 
+#                          user=user,
+#                          title=f"{user.username}'s Profile")
+
+# task 2.4.a fix
 def view_profile(user_id):
     user = User.get_by_id(user_id)
+    # Add the Access Control Check (The Mitigation)
+    # Check if the requested ID matches the current user's ID
+    # OR if the current user has the ADMINISTER permission.
+    if user_id != current_user.id and not current_user.can(Permission.ADMINISTER):
+        # If neither is true, deny access (send 403 Forbidden)
+        flash("not authorized", "error")
+        return redirect(url_for("public.home"))
     if not user:
         flash("User not found", "error")
         return redirect(url_for("public.home"))
