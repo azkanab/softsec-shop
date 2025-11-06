@@ -8,7 +8,8 @@ from pluggy import HookimplMarker
 from flaskshop.order.models import Order
 from flaskshop.utils import flash_errors
 from flaskshop.extensions import csrf_protect as profile
-
+from flaskshop.constant import Permission
+s
 from .forms import AddressForm, ChangePasswordForm, LoginForm, RegisterForm, ResetPasswd
 from .models import User, UserAddress
 from .utils import gen_tmp_pwd, send_reset_pwd_email
@@ -85,8 +86,27 @@ def set_password():
         flash_errors(form)
     return redirect(url_for("account.index"))
 
+# task 2.4.a vulnerable
+# def view_profile(user_id):
+#     user = User.get_by_id(user_id)
+#     if not user:
+#         flash("User not found", "error")
+#         return redirect(url_for("public.home"))
+    
+#     return render_template('account/profile.html', 
+#                          user=user,
+#                          title=f"{user.username}'s Profile")
+
+# task 2.4.a fix
 def view_profile(user_id):
     user = User.get_by_id(user_id)
+    # Add the Access Control Check (The Mitigation)
+    # Check if the requested ID matches the current user's ID
+    # OR if the current user has the ADMINISTER permission.
+    if user_id != current_user.id and not current_user.can(Permission.ADMINISTER):
+        # If neither is true, deny access (send 403 Forbidden)
+        flash("not authorized", "error")
+        return redirect(url_for("public.home"))
     if not user:
         flash("User not found", "error")
         return redirect(url_for("public.home"))
