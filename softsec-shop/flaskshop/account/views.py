@@ -8,7 +8,8 @@ from pluggy import HookimplMarker
 from flaskshop.order.models import Order
 from flaskshop.utils import flash_errors
 from flaskshop.extensions import csrf_protect as profile
-
+from flaskshop.constant import Permission
+s
 from .forms import AddressForm, ChangePasswordForm, LoginForm, RegisterForm, ResetPasswd
 from .models import User, UserAddress
 from .utils import gen_tmp_pwd, send_reset_pwd_email
