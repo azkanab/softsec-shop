@@ -120,7 +120,7 @@ def addresses():
     addresses = current_user.addresses
     return render_template("account/addresses.html", addresses=addresses)
 
-@profile.exempt
+# Task 2.1. CSRF - Removing the @profile.exempt
 def edit_address():
     """Create and edit an address."""
     form = AddressForm(request.form)
