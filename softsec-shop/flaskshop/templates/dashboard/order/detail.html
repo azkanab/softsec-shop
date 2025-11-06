@@ -1,4 +1,5 @@
 {% extends 'dashboard/layout.html' %}
+{% import '_macros.html' as macros %}
 
 {% block body %}
 <section class="content">
@@ -28,7 +29,7 @@
                         <div class="col-sm-4 invoice-col">
                             <strong>{% trans %}Shipping Address{% endtrans %}</strong>
                             <address>
-                                {{order.shipping_address | safe}}
+                                {{ macros.format_address(order.shipping_address) }}
                             </address>
                         </div>
                         <div class="col-sm-4 invoice-col">

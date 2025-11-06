@@ -116,7 +116,8 @@
             <h3>
                 {% trans %}Shipping address{% endtrans %}
             </h3>
-            {{ order.shipping_address | safe }}
+            <!-- Task 2.2 XSS - Format address -->
+            {{ macros.format_address(order.shipping_address )}}
             {% endif %}
         </div>
         {% if order.status_human == "unfulfilled" %}
