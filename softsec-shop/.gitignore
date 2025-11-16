@@ -60,3 +60,6 @@ migrations/
 
 # Return shipping label folder (pdf & png)
 flaskshop/static/shipping_label/
+
+# local mkcert certs (do not commit secret keys)
+certs/mkcert-v1.4.4-windows-amd64.exe

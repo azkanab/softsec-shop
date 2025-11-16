@@ -4,6 +4,7 @@ import sys
 
 from flask import Flask, render_template
 
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flaskshop import commands
 from flaskshop.extensions import (
     babel,
@@ -34,6 +35,9 @@ def create_app(config_object=Config):
     register_commands(app)
     jinja_global_varibles(app)
     log_slow_queries(app)
+        # Make Flask correctly detect HTTPS behind nginx
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
     return app
 
 
