@@ -54,7 +54,6 @@ window.paypal
         });
 
         const orderData = await response.json();
-        console.log(orderData, "response")
         // Three cases to handle:
         //   (1) Recoverable INSTRUMENT_DECLINED -> call actions.restart()
         //   (2) Other non-recoverable errors -> Show a failure message
