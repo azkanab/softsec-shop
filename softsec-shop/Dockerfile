@@ -18,4 +18,4 @@ COPY app.py  app.py
 # change flag into '--no-cache-dir' to avoid bloating the image size.
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--reload"]
