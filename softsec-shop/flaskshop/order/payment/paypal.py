@@ -78,12 +78,12 @@ def create_order(total_amount):
 """
 
 # Task 3.5 Step 2 - Finalize or capture order/payment in Paypal server by calling Paypal REST API
-def capture_order(order_id):
+def capture_order(payment_id):
     client = get_paypal_client()
     orders_controller = client.orders
 
     order = orders_controller.capture_order(
-        {"id": order_id, "prefer": "return=representation"}
+        {"id": payment_id, "prefer": "return=representation"}
     )
     return Response(
         ApiHelper.json_serialize(order.body), status=200, mimetype="application/json"
