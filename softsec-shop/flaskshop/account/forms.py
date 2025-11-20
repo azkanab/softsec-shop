@@ -179,3 +179,19 @@ class AddressForm(FlaskForm):
         """Create instance."""
         kwargs['meta'] = {'csrf': False}
         super().__init__(*args, **kwargs)
+
+# 3.3 new class
+class Verify2FAForm(FlaskForm):
+    """Form to verify the 6-digit TOTP code."""
+    otp_code = StringField(
+        lazy_gettext("Six-Digit Code"),
+        [
+            DataRequired(), 
+            Length(min=6, max=6)
+        ],
+        description=lazy_gettext('Enter the code from your authenticator app.')
+    )
+
+    def __init__(self, *args, **kwargs):
+        """Create instance."""
+        super().__init__(*args, **kwargs) 
