@@ -96,7 +96,7 @@ class ResetPasswd(FlaskForm):
         return True
     
 # Task 3.2 - Form for force resetting password when there is data breach or the account is flagged for suspicious activity
-class ForceResetPasswd(FlaskForm):
+class ForceResetPasswdForm(FlaskForm):
     """Force Password Reset (if the account is suspected)"""
 
     new_password = PasswordField(lazy_gettext("New Password"), validators=[DataRequired(), Length(min=8, max=64)])
@@ -104,12 +104,12 @@ class ForceResetPasswd(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         """Create instance."""
-        super(ForceResetPasswd, self).__init__(*args, **kwargs)
+        super(ForceResetPasswdForm, self).__init__(*args, **kwargs)
         self.user = current_user
 
     def validate(self, extra_validators=None):
         """Validate the form."""
-        initial_validation = super(ForceResetPasswd, self).validate(extra_validators)
+        initial_validation = super(ForceResetPasswdForm, self).validate(extra_validators)
         if not initial_validation:
             return False
         

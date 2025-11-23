@@ -10,7 +10,7 @@ from flaskshop.utils import flash_errors
 from flaskshop.extensions import csrf_protect as profile
 from flaskshop.constant import Permission
 
-from .forms import AddressForm, ChangePasswordForm, LoginForm, RegisterForm, ResetPasswd, Verify2FAForm, ForceResetPasswd
+from .forms import AddressForm, ChangePasswordForm, LoginForm, RegisterForm, ResetPasswd, Verify2FAForm, ForceResetPasswdForm
 from .models import User, UserAddress
 from .utils import gen_tmp_pwd, send_reset_pwd_email
 
@@ -94,7 +94,7 @@ def login():
 # Task 3.2 - API for force reset password
 def forceresetpwd():
     """Force Reset user password"""
-    form = ForceResetPasswd(request.form)
+    form = ForceResetPasswdForm(request.form)
 
     if form.validate_on_submit():
         user = User.get_by_id(current_user.id)
