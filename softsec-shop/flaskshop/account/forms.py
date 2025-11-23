@@ -5,9 +5,9 @@ from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import PasswordField, StringField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
+from flaskshop.account.utils import isPasswordBreached
 
 from .models import User
-
 
 class RegisterForm(FlaskForm):
     """Register form."""
@@ -29,8 +29,9 @@ class RegisterForm(FlaskForm):
         lazy_gettext("Email"),
         validators=[DataRequired(), Email(), Length(min=6, max=40)],
     )
+    # Task 3.2 - Add minimum length for password when registering account
     password = PasswordField(
-        lazy_gettext("Password"), validators=[DataRequired(), Length(min=6, max=40)]
+        lazy_gettext("Password"), validators=[DataRequired(), Length(min=8, max=64)]
     )
     confirm = PasswordField(
         lazy_gettext("Verify password"),
@@ -58,9 +59,12 @@ class RegisterForm(FlaskForm):
         if user:
             self.email.errors.append(lazy_gettext("Email already registered"))
             return False
+        # Task 3.2 - Check using pwned API if the input password has already been breached
+        if isPasswordBreached(self.password.data):
+            self.password.errors.append(lazy_gettext("This password is already breached. Please choose another password!"))
+            return False
         return True
-
-
+        
 class ResetPasswd(FlaskForm):
     """Password reset"""
 
@@ -87,6 +91,34 @@ class ResetPasswd(FlaskForm):
             return False
         if not self.user.is_active:
             self.username.errors.append(lazy_gettext("User not activated"))
+            return False
+
+        return True
+    
+# Task 3.2 - Form for force resetting password when there is data breach or the account is flagged for suspicious activity
+class ForceResetPasswd(FlaskForm):
+    """Force Password Reset (if the account is suspected)"""
+
+    new_password = PasswordField(lazy_gettext("New Password"), validators=[DataRequired(), Length(min=8, max=64)])
+    confirm_password = PasswordField(lazy_gettext("Confirm New Password"), validators=[DataRequired(), EqualTo("new_password", message=lazy_gettext("Passwords must match")),])
+
+    def __init__(self, *args, **kwargs):
+        """Create instance."""
+        super(ForceResetPasswd, self).__init__(*args, **kwargs)
+        self.user = current_user
+
+    def validate(self, extra_validators=None):
+        """Validate the form."""
+        initial_validation = super(ForceResetPasswd, self).validate(extra_validators)
+        if not initial_validation:
+            return False
+        
+        if self.user.check_password(self.new_password.data):
+            self.new_password.errors.append(lazy_gettext("New password cannot be the same as old password. Please choose another password!"))
+            return False
+
+        if isPasswordBreached(self.new_password.data):
+            self.new_password.errors.append(lazy_gettext("This password is already breached. Please choose another password!"))
             return False
 
         return True
@@ -133,7 +165,8 @@ class ChangePasswordForm(FlaskForm):
     old_password = PasswordField(
         lazy_gettext("Old Password"), validators=[DataRequired()]
     )
-    password = PasswordField(lazy_gettext("Password"), validators=[DataRequired()])
+    # Task 3.2 Add minimum length for password when changing password
+    password = PasswordField(lazy_gettext("Password"), validators=[DataRequired(), Length(min=8, max=64)])
     confirm = PasswordField(
         lazy_gettext("Verify password"),
         validators=[
@@ -155,6 +188,11 @@ class ChangePasswordForm(FlaskForm):
 
         if not self.user.check_password(self.old_password.data):
             self.old_password.errors.append(lazy_gettext("Invalid password"))
+            return False
+        
+        # Task 3.2 - Check using pwned API if the input password has already been breached
+        if isPasswordBreached(self.password.data):
+            self.password.errors.append(lazy_gettext("This password is already breached. Please choose another password!"))
             return False
 
         return True

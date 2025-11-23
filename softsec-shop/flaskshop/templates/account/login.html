@@ -17,10 +17,11 @@
         </div>
       </div>
       <div class="col-md-6 login__form">
-        {% if not reset %}
-          <h3>{% trans %}Log in{% endtrans %}</h3>
+        <!-- Task 3.2 - Change title in the login page, add case when the page is force reset password -->
+        {% if force_reset or reset %}
+          <h3>{% trans %}Reset Password{% endtrans %}</h3>
         {% else %}
-            <h3>{% trans %}Reset Password{% endtrans %}</h3>
+          <h3>{% trans %}Log in{% endtrans %}</h3>
         {% endif %}
         {% include "account/partials/login_form.html" %}
       </div>

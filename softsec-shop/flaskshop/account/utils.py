@@ -2,6 +2,8 @@ import email.utils
 import random
 import smtplib
 import string
+import hashlib
+import requests
 from email.message import EmailMessage
 from functools import wraps
 
@@ -103,6 +105,18 @@ class PhoneNumber(phonenumbers.PhoneNumber):
     def __hash__(self):
         return hash(self.__unicode__())
 
+# Task 3.2 - Helper to check if input password is breach using pwned API
+def isPasswordBreached(password):
+    encrypted_pwd = hashlib.sha1(password.encode("utf-8")).hexdigest().upper()
+    encrypted_prefix = encrypted_pwd[:5]
+    encrypted_suffix = encrypted_pwd[5:]
+    response = requests.get(f'https://api.pwnedpasswords.com/range/{encrypted_prefix}')
+    arr_suffix_count = response.text.splitlines()
+    for suffix_count in arr_suffix_count:
+        suffix = suffix_count.split(':')[0]
+        if suffix == encrypted_suffix:
+            return True
+    return False
 
 def to_python(value):
     if value in (None, ""):  # None or ''

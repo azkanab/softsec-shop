@@ -10,7 +10,14 @@
                     <div class="card">
                         <div class="card-header">
                             <h4 class="card-title">{{ title }} </h4>
-                            <div class="card-tools">
+                            <div class="card-tools d-flex gap-3">
+                                <!-- Task 3.2. - Add report data breach button on all users (except admin) on dashboard -->
+                                <a class="btn btn-danger btn-sm"
+                                    data-report-url="users/report-all-users"
+                                    data-bs-toggle="modal" data-bs-target="#reportBreachModal"
+                                >
+                                    {% trans %}Report Data Breach{% endtrans %}
+                                </a>
                                 <form>
                                     <div class="input-group input-group-sm">
                                         <input type="text" class="form-control" placeholder="Search" name="keyword"

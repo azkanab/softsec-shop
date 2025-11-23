@@ -10,7 +10,7 @@ from flaskshop.utils import flash_errors
 from flaskshop.extensions import csrf_protect as profile
 from flaskshop.constant import Permission
 
-from .forms import AddressForm, ChangePasswordForm, LoginForm, RegisterForm, ResetPasswd, Verify2FAForm
+from .forms import AddressForm, ChangePasswordForm, LoginForm, RegisterForm, ResetPasswd, Verify2FAForm, ForceResetPasswd
 from .models import User, UserAddress
 from .utils import gen_tmp_pwd, send_reset_pwd_email
 
@@ -80,13 +80,35 @@ def login():
         
         # --- END PRODUCTION READY 2FA CHECK ---
         login_user(form.user)
-        redirect_url = request.args.get("next") or url_for("public.home")
-        flash(lazy_gettext("You are log in."), "success")
+        if form.user.is_suspicious:
+            redirect_url = url_for("account.forceresetpwd")
+            flash(lazy_gettext("Your password is breached. Please change your password"), "warning")
+        else:
+            redirect_url = request.args.get("next") or url_for("public.home")
+            flash(lazy_gettext("You are log in."), "success")
         return redirect(redirect_url)
     else:
         flash_errors(form)
     return render_template("account/login.html", form=form)
 
+# Task 3.2 - API for force reset password
+def forceresetpwd():
+    """Force Reset user password"""
+    form = ForceResetPasswd(request.form)
+
+    if form.validate_on_submit():
+        user = User.get_by_id(current_user.id)
+        user.update(
+            password=form.new_password.data,
+            is_suspicious=False
+        )
+        user.save()
+        flash(lazy_gettext("Your password has been successfully updated. Please log in with your new password."), "success")
+        logout_user()
+        return redirect(url_for("account.login"))
+    else:
+        flash_errors(form)
+    return render_template("account/login.html", form=form, force_reset=True)
 
 def resetpwd():
     """Reset user password"""
@@ -298,12 +320,24 @@ def delete_address(id):
         UserAddress.delete(user_address)
     return redirect(url_for("account.index") + "#addresses")
 
+# Task 3.2 - If a logged in account is flagged for being suspicious (is_suspicious = True), it must be redirected to forceresetpwd page
+def check_suspicious_user():
+    allowed_endpoints = ['account.forceresetpwd', 'account.logout', 'static']
+
+    if current_user.is_authenticated: # if user is logged in
+        if current_user.is_suspicious:
+            if request.endpoint not in allowed_endpoints:
+                flash(lazy_gettext("Your password is breached. Please change your password"), "warning")
+                return redirect(url_for("account.forceresetpwd"))
+
 @impl
 def flaskshop_load_blueprints(app):
     bp = Blueprint("account", __name__)
     bp.add_url_rule("/", view_func=index)
     bp.add_url_rule("/login", view_func=login, methods=["GET", "POST"])
     bp.add_url_rule("/resetpwd", view_func=resetpwd, methods=["GET", "POST"])
+    # Task 3.2 - New endpoint for force reset when user is suspicious
+    bp.add_url_rule("/forceresetpwd", view_func=forceresetpwd, methods=["GET", "POST"])
     bp.add_url_rule("/logout", view_func=logout)
     bp.add_url_rule("/signup", view_func=signup, methods=["GET", "POST"])
     bp.add_url_rule("/setpwd", view_func=set_password, methods=["POST"])
@@ -314,5 +348,8 @@ def flaskshop_load_blueprints(app):
         "/address/<int:id>/delete", view_func=delete_address, methods=["POST"]
     )
     bp.add_url_rule('/profile/<int:user_id>', view_func=view_profile)
-    
+
+    # Task 3.2 - Check if the user is suspicious before going to every page, if it is, then it will be redirected to reset password
+    app.before_request(check_suspicious_user)
+
     app.register_blueprint(bp, url_prefix="/account")

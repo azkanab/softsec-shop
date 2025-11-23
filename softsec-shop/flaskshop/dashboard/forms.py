@@ -22,6 +22,7 @@ from wtforms import (
 from wtforms.validators import DataRequired, Length, NumberRange, Regexp, optional
 
 from flaskshop.constant import Permission, SettingValueType
+from flaskshop.account.utils import isPasswordBreached
 
 
 class FlaskForm(_FlaskForm):
@@ -94,7 +95,8 @@ class SiteConfigForm(FlaskForm):
 class UserForm(FlaskForm):
     username = StringField(lazy_gettext("User Name"), validators=[DataRequired()])
     email = StringField(lazy_gettext("E-mail"), validators=[DataRequired()])
-    password = PasswordField(lazy_gettext("Password"))
+    # Task 3.2 - Making sure that the password length reaches minimum of 8
+    password = PasswordField(lazy_gettext("Password"), validators=[Length(min=8, max=64)])
     is_active = BooleanField(lazy_gettext("Is Active"))
     role = SelectField(
         lazy_gettext("Role"),
@@ -104,6 +106,20 @@ class UserForm(FlaskForm):
     created_at = DateTimeField(lazy_gettext("Created at"))
     updated_at = DateTimeField(lazy_gettext("Updated at"))
     submit = SubmitField(lazy_gettext("Submit"))
+
+    # Task 3.2 - Add checking if the input password is breached when changing passsword through dashboard
+    def validate(self, extra_validators=None):
+        """Validate the form."""
+        initial_validation = super(UserForm, self).validate(extra_validators)
+        if not initial_validation:
+            return False
+        
+        if self.password.data:
+            if isPasswordBreached(self.password.data):
+                self.password.errors.append(lazy_gettext("This password is already breached. Please choose another password!"))
+                return False
+
+        return True
 
 
 class UserAddressForm(FlaskForm):

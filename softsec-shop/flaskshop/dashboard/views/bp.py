@@ -57,7 +57,7 @@ from .site import (
     site_page_del,
     site_setting,
 )
-from .user import address_edit, user, user_edit, user_del, users
+from .user import address_edit, user, user_edit, user_del, user_report, users, all_user_report
 
 impl = HookimplMarker("flaskshop")
 
@@ -130,6 +130,9 @@ def flaskshop_load_blueprints(app):
         "/users/<user_id>/edit", view_func=user_edit, methods=["GET", "POST"]
     )
     bp.add_url_rule("/users/<int:id>/delete", view_func=user_del, methods=["DELETE"])
+    # Task 3.2 - Add API endpoint for the report and report data breach button
+    bp.add_url_rule("/users/<user_id>/report", view_func=user_report, methods=["PUT"])
+    bp.add_url_rule("/users/report-all-users", view_func=all_user_report, methods=["PUT"])
     bp.add_url_rule(
         "/users/address/<id>/edit", view_func=address_edit, methods=["GET", "POST"]
     )

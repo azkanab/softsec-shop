@@ -2,18 +2,25 @@
 <form method="post" action="" id="loginForm" novalidate>
   <fieldset>
     {{ form.csrf_token }}
-    {{ render_field(form.username) }}
-    {% if not reset %}
-    {{ render_field(form.password) }}
+    <!-- Task 3.2 - Change form field in the login page, add case when the page is force reset password -->
+    {% if force_reset %}
+      {{ render_field(form.new_password) }}
+      {{ render_field(form.confirm_password) }}
+    {% elif reset %}
+      {{ render_field(form.username) }}
+    {% else %}
+      {{ render_field(form.username) }}
+      {{ render_field(form.password) }}
     {% endif %}
   </fieldset>
   <div class="row login__btn-group">
     <div class="col-sm-12">
       <button class="btn btn-primary narrow" type="submit">
-        {% if not reset %}
-        {% trans %}Log in{% endtrans %}
+        <!-- Task 3.2 - Change button in the login page, add case when the page is force reset password -->
+        {% if force_reset or reset %}
+          {% trans %}Reset Password{% endtrans %}
         {% else %}
-        {% trans %}Reset Password{% endtrans %}
+          {% trans %}Log in{% endtrans %}
         {% endif %}
       </button>
       {% if not reset %}
