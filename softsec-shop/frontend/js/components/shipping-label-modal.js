@@ -101,17 +101,9 @@ if (printSendBtn) {
                 .then(response => response.json())
                 .then(data => {
                 if (data.success) {
-                        // const returnOrderToast = document.getElementById('returnOrderToast');
                         labelModal.style.display = 'none';
 
                         window.location.reload();
-
-                        // const toast = new bootstrap.Toast(returnOrderToast);
-                        // toast.show();
-
-                        // returnOrderToast.addEventListener('hidden.bs.toast', () => {
-                        //         window.location.reload();
-                        // }, { once: true });
                 } else {
                         alert('Error sending return. Please try again.');
                 }
