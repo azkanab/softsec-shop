@@ -1,6 +1,7 @@
 import time
 import random
 from datetime import datetime, timezone
+import json
 
 from flask import (
     Blueprint,
@@ -20,6 +21,7 @@ from pluggy import HookimplMarker
 from flaskshop.constant import OrderStatusKinds, PaymentStatusKinds, ShipStatusKinds, OrderReturnStatusKinds, RefundStatusKinds
 from flaskshop.extensions import csrf_protect
 from .payment import zhifubao
+from .payment import paypal
 
 from .models import Order, OrderPayment, OrderReturn, OrderRefund
 
@@ -61,7 +63,16 @@ def create_payment(token, payment_method):
             total=order.total,
             customer_ip_address=customer_ip_address,
         )
-    if payment_method == "alipay":
+    # Task 3.5 Step 1: Calling function in Paypal to call Paypal REST API
+    if payment_method == "paypal":
+        response = paypal.create_order(order.total)
+        response_json = response.get_data(as_text=True)
+        response_data = json.loads(response_json)
+        # Task 3.5 Step 1: Set payment_no in the database with the payment ID generated from Paypal REST API
+        payment.set_payment_no(response_data["id"])
+        payment.save()
+        return response
+    elif payment_method == "alipay":
         redirect_url = zhifubao.send_order(order.token, payment_no, order.total)
         payment.redirect_url = redirect_url
     return payment
@@ -72,6 +83,28 @@ def ali_pay(token):
     payment = create_payment(token, "alipay")
     return redirect(payment.redirect_url)
 
+# Task 3.5 Step 1: Our API proxy to eventually call Paypal REST API to create order/payment
+@login_required
+def paypal_pay(token):
+    response = create_payment(token, "paypal")
+    return response
+
+# Task 3.5 Step 2: Our API proxy to eventually call Paypal REST API to capture or finalize order/payment
+def paypal_notify(payment_id):
+    response = paypal.capture_order(payment_id)
+    success = response.status_code == 200
+    if success:
+        response_data = json.loads(response.get_data(as_text=True))
+        completed = response_data.get("status") == "COMPLETED"
+        if completed:
+            order_payment = OrderPayment.query.filter_by(
+                payment_no=payment_id
+            ).first()
+            paid_time = datetime.strptime(response_data.get("create_time"), "%Y-%m-%dT%H:%M:%SZ")
+            order_payment.pay_success(paid_at=paid_time)
+            response_data["redirect_url"] = url_for("order.payment_success", _external=True)
+            return jsonify(response_data), 200
+    return response, 400
 
 @csrf_protect.exempt
 def ali_notify():
@@ -264,6 +297,9 @@ def flaskshop_load_blueprints(app):
     bp.add_url_rule("/", view_func=index)
     bp.add_url_rule("/<string:token>", view_func=show)
     bp.add_url_rule("/pay/<string:token>/alipay", view_func=ali_pay)
+    # Task 3.5 Endpoints for step 1 & step 2 of Paypal Gateway
+    bp.add_url_rule("/pay/<string:token>/paypal", view_func=paypal_pay, methods=["POST"])
+    bp.add_url_rule("/paypal/gateway/<string:payment_id>/", view_func=paypal_notify, methods=["POST"])
     bp.add_url_rule("/alipay/notify", view_func=ali_notify, methods=["POST", "HEAD"])
     bp.add_url_rule("/pay/<string:token>/testpay", view_func=test_pay_flow)
     bp.add_url_rule("/payment_success", view_func=payment_success)

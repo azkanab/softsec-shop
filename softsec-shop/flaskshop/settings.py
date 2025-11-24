@@ -84,6 +84,10 @@ class Config:
 
     GA_MEASUREMENT_ID = os.getenv("GA_MEASUREMENT_ID", "")
 
+    # Config for Paypal
+    PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
+    PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
+
 
 class ProdConfig(Config):
     ENV = "prod"

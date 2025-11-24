@@ -121,11 +121,21 @@
             {% endif %}
         </div>
         {% if order.status_human == "unfulfilled" %}
-        <div class="col-6">
+        <div class="col-6 d-flex flex-column align-items-end">
             <span class="float-right">{% trans %}Please pay before 00:30, else the order will auto closed{% endtrans %}</span>
             <a href="{{ url_for('order.ali_pay', token=order.token) }}" class="btn btn-primary float-right">
                 {% trans %}Alipay{% endtrans %}
             </a>
+            <!-- Task 3.5 - Paypal Button from Paypal SDK -->
+            <div style="width: 60%; height: 55px;">
+                <div id="paypal-button-container"
+                    class="paypal-button-container"
+                    data-order-token="{{ order.token }}">
+                </div>
+                <p id="error-message"></p>
+
+                <script src="https://www.paypal.com/sdk/js?client-id={{ config.PAYPAL_CLIENT_ID }}&buyer-country=US&currency=USD&components=buttons&disable-funding=credit,card,venmo"></script>
+            </div>
             <a href="{{ url_for('order.test_pay_flow', token=order.token) }}" class="btn secondary float-right">
                 {% trans %}Pay for test{% endtrans %}
             </a>

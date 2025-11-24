@@ -11,6 +11,7 @@ import './components/shipping-label-modal';
 import './components/styleguide';
 import './components/cart';
 import './components/variant-choose';
+import './components/paypal-button';
 
 import '../scss/storefront.scss';
 
