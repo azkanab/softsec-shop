@@ -1,5 +1,6 @@
 import time
-from datetime import datetime
+import random
+from datetime import datetime, timezone
 
 from flask import (
     Blueprint,
@@ -8,17 +9,19 @@ from flask import (
     render_template,
     request,
     url_for,
+    jsonify,
+    flash
 )
 
 from flask_babel import lazy_gettext
 from flask_login import current_user, login_required
 from pluggy import HookimplMarker
 
-from flaskshop.constant import OrderStatusKinds, PaymentStatusKinds, ShipStatusKinds
+from flaskshop.constant import OrderStatusKinds, PaymentStatusKinds, ShipStatusKinds, OrderReturnStatusKinds, RefundStatusKinds
 from flaskshop.extensions import csrf_protect
 from .payment import zhifubao
 
-from .models import Order, OrderPayment
+from .models import Order, OrderPayment, OrderReturn, OrderRefund
 
 impl = HookimplMarker("flaskshop")
 
@@ -114,6 +117,136 @@ def cancel_order(token):
     order.cancel()
     return render_template("orders/details.html", order=order)
 
+def generate_shipping_label(order):
+    # Task 3.6 - TO DO: Generate shipping label
+
+
+    shipping_label_url = f"/static/shipping_label/{order.token}.png"
+    return shipping_label_url
+
+# Task 3.6. - TO DO: PayPal refund
+@login_required
+def paypal_refund(order):
+    return True
+
+@login_required
+def handle_refund(token):
+    order = Order.query.filter_by(token=token).first()
+    payment = OrderPayment.query.filter_by(order_id=order.id).first()
+    customer_ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
+    payment_no = str(int(time.time())) + str(current_user.id)
+
+    # Task 3.6. - Create new row for order_refund table
+    refund = OrderRefund.query.filter_by(order_id=order.id).first()
+    if not refund:
+        refund = OrderRefund.create(
+            order_id=order.id,
+            status=RefundStatusKinds.waiting.value,
+            total=payment.total,
+            customer_ip_address=customer_ip_address,
+            payment_method=payment.payment_method,
+            payment_no=payment_no
+        )
+
+    # Task 3.6. - TO DO: Handle refund process for each payment method
+    returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
+    refund_success = True # Just example. Please update this based on the response
+    if payment.payment_method == "paypal":
+        refund_success = paypal_refund(order)
+    else:
+        pass # Can make a new function to handle other payment methods
+    if refund_success:
+        refund.update(
+            status=RefundStatusKinds.confirmed.value,
+            refunded_at=datetime.now(timezone.utc)
+        )
+        returnOrder.update(
+            status=OrderReturnStatusKinds.refunded.value
+        )
+        flash(lazy_gettext("Refund processed successfully"), "success")
+    else:
+        refund.update(
+            status=RefundStatusKinds.rejected.value
+        )
+        flash(lazy_gettext("Refund process failed"), "error")
+    
+    return redirect(url_for("dashboard.order_detail", id=order.id))
+
+@login_required
+def cancel_return_order(token):
+    order = Order.query.filter_by(token=token).first()
+    if not order.is_self_order:
+        abort(403, "This is not your order!")
+
+    # Task 3.6. - Set status in order_order table to canceled and status in order_event table to order_canceled
+    order.cancel()
+
+    shipping_label_url = generate_shipping_label(order)
+
+    # Task 3.6. - Create a new row for OrderReturn
+    returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
+    if not returnOrder:
+        returnOrder = OrderReturn.create(
+            order_id=order.id,
+            status=OrderReturnStatusKinds.label_created.value,
+            shipping_label=shipping_label_url,
+            cancellation_time=datetime.now(timezone.utc),
+            carrier=random.choice(["UPC", "DHL"])
+        )
+
+    return jsonify({
+        "success": True,
+        "shipping_label_url": shipping_label_url,
+        "order_token": order.token,
+        "cancellation_time": returnOrder.cancellation_time
+    })
+
+@login_required
+def send_return(token):
+    order = Order.query.filter_by(token=token).first()
+    if not order.is_self_order:
+        abort(403, "This is not your order!")
+
+    # Task 3.6. - Update the status in order_return table
+    returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
+    if returnOrder:
+        returnOrder.update(
+            status=OrderReturnStatusKinds.in_transit.value
+        )
+    else:
+        return jsonify({
+            "success": False,
+            "message": "Data not found in the table"
+        })
+    
+    flash(lazy_gettext("Your return will be picked up soon. Do not lose the shipping label and please attach it to your package"), "success")
+
+    return jsonify({
+        "success": True,
+        "message": "The status is already updated"
+    })
+
+@login_required
+def receive_return(token):
+    order = Order.query.filter_by(token=token).first()
+    if not order:
+        abort(404, "Order not found")
+
+    # Task 3.6. - Update the status in order_return table
+    returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
+    if returnOrder:
+        returnOrder.update(
+            status=OrderReturnStatusKinds.received.value,
+            arrival_time=datetime.now(timezone.utc)
+        )
+    else:
+        flash(lazy_gettext("Return record not found"), "error")
+        return redirect(url_for("dashboard.order_detail", id=order.id))
+
+    handle_refund(token)
+
+    return redirect(url_for("dashboard.order_detail", id=order.id))
+
 
 @login_required
 def receive(token):
@@ -135,5 +268,9 @@ def flaskshop_load_blueprints(app):
     bp.add_url_rule("/pay/<string:token>/testpay", view_func=test_pay_flow)
     bp.add_url_rule("/payment_success", view_func=payment_success)
     bp.add_url_rule("/cancel/<string:token>", view_func=cancel_order)
+    bp.add_url_rule("/cancel_return/<string:token>", view_func=cancel_return_order, methods=["POST"])
+    bp.add_url_rule("/send_return/<string:token>", view_func=send_return, methods=["POST"])
+    bp.add_url_rule("/receive_return/<string:token>", view_func=receive_return, methods=["GET", "POST"])
+    bp.add_url_rule("/refund/<string:token>", view_func=handle_refund, methods=["GET", "POST"])
     bp.add_url_rule("/receive/<string:token>", view_func=receive)
     app.register_blueprint(bp, url_prefix="/orders")

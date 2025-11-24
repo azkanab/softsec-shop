@@ -127,6 +127,21 @@
                                 <i class="fa fa-ban"></i>{% trans %}Draft Order{% endtrans %}
                             </a>
                             {% endif %}
+                            <!-- Task 3.6. - Buttons for return and refund -->
+                            {% if order.status_human == "canceled" %}
+                                {% if order.order_return and order.order_return.status_human == "in_transit" %}
+                                <a class="btn btn-success float-right"
+                                    href="{{url_for('order.receive_return', token=order.token)}}">
+                                    <i class="fa fa-credit-card"></i> {% trans %}Return Arrived{% endtrans %}
+                                </a>
+                                {% endif %}
+                                {% if order.order_return and order.order_return.status_human == "received" %}
+                                    <a class="btn btn-success float-right"
+                                        href="{{url_for('order.handle_refund', token=order.token)}}">
+                                        <i class="fa fa-credit-card"></i> {% trans %}Retry Refund{% endtrans %}
+                                    </a>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>
