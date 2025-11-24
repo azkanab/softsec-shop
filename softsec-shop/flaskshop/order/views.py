@@ -102,6 +102,9 @@ def paypal_notify(payment_id):
             order_payment.pay_success(paid_at=paid_time)
             response_data["redirect_url"] = url_for("order.payment_success", _external=True)
             return jsonify(response_data), 200
+    order_payment.update(
+        status=PaymentStatusKinds.rejected.value
+    )
     return response, 400
 
 @csrf_protect.exempt
