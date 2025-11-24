@@ -11,7 +11,8 @@ from flaskshop.constant import (
     OrderStatusKinds,
     PaymentStatusKinds,
     ShipStatusKinds,
-    OrderReturnStatusKinds
+    OrderReturnStatusKinds,
+    RefundStatusKinds
 )
 from flaskshop.database import Column, Model, db
 from flaskshop.discount.models import Voucher
@@ -193,6 +194,10 @@ class Order(Model):
     @property
     def order_return(self):
         return OrderReturn.query.filter_by(order_id=self.id).first()
+    
+    @property
+    def order_refund(self):
+        return OrderRefund.query.filter_by(order_id=self.id).first()
 
     def pay_success(self, payment):
         self.status = OrderStatusKinds.fulfilled.value
@@ -340,6 +345,9 @@ class OrderReturn(Model):
     @property
     def status_label(self):
         status =  OrderReturnStatusKinds(int(self.status)).name
+        order = Order.get_by_id(self.order_id)
+        if order.status == "refunded":
+            status = "refunded"
 
         statusText = {
             "in_transit": "In Transit",
@@ -358,3 +366,7 @@ class OrderRefund(Model):
     payment_method = Column(db.String(255))
     payment_no = Column(db.String(255), unique=True)
     refunded_at = Column(db.DateTime())
+
+    @property
+    def status_human(self):
+        return RefundStatusKinds(int(self.status)).name

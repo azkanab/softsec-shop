@@ -146,11 +146,16 @@ def payment_success():
 
 
 @login_required
-def cancel_order(token):
+def cancel_order(token, is_refund):
+    is_refund = bool(is_refund)
     order = Order.query.filter_by(token=token).first()
     if not order.is_self_order:
         abort(403, "This is not your order!")
     order.cancel()
+    if is_refund:
+        handle_refund(token)
+    else:
+        flash(lazy_gettext("Your order has been cancelled"), "success")
     return render_template("orders/details.html", order=order)
 
 def generate_shipping_label(order):
@@ -185,7 +190,6 @@ def handle_refund(token):
         )
 
     # Task 3.6. - TO DO: Handle refund process for each payment method
-    returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
     refund_success = True # Just example. Please update this based on the response
     if payment.payment_method == "paypal":
         refund_success = paypal_refund(order)
@@ -196,15 +200,15 @@ def handle_refund(token):
             status=RefundStatusKinds.confirmed.value,
             refunded_at=datetime.now(timezone.utc)
         )
-        returnOrder.update(
-            status=OrderReturnStatusKinds.refunded.value
+        order.update(
+            status=OrderStatusKinds.refunded.value
         )
         flash(lazy_gettext("Refund processed successfully"), "success")
     else:
         refund.update(
             status=RefundStatusKinds.rejected.value
         )
-        flash(lazy_gettext("Refund process failed"), "error")
+        flash(lazy_gettext("Refund process failed. Please wait for several more hours"), "warning")
     
     return redirect(url_for("dashboard.order_detail", id=order.id))
 
@@ -257,6 +261,10 @@ def send_return(token):
     
     flash(lazy_gettext("Your return will be picked up soon. Do not lose the shipping label and please attach it to your package"), "success")
 
+    order.update(
+        status=OrderStatusKinds.returned.value
+    )
+
     return jsonify({
         "success": True,
         "message": "The status is already updated"
@@ -306,7 +314,7 @@ def flaskshop_load_blueprints(app):
     bp.add_url_rule("/alipay/notify", view_func=ali_notify, methods=["POST", "HEAD"])
     bp.add_url_rule("/pay/<string:token>/testpay", view_func=test_pay_flow)
     bp.add_url_rule("/payment_success", view_func=payment_success)
-    bp.add_url_rule("/cancel/<string:token>", view_func=cancel_order)
+    bp.add_url_rule("/cancel/<string:token>/<int:is_refund>", view_func=cancel_order)
     bp.add_url_rule("/cancel_return/<string:token>", view_func=cancel_return_order, methods=["POST"])
     bp.add_url_rule("/send_return/<string:token>", view_func=send_return, methods=["POST"])
     bp.add_url_rule("/receive_return/<string:token>", view_func=receive_return, methods=["GET", "POST"])

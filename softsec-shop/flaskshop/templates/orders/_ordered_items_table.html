@@ -139,7 +139,13 @@
             <a href="{{ url_for('order.test_pay_flow', token=order.token) }}" class="btn secondary float-right">
                 {% trans %}Pay for test{% endtrans %}
             </a>
-            <a href="{{ url_for('order.cancel_order', token=order.token) }}" class="btn danger float-right">
+            <a href="{{ url_for('order.cancel_order', token=order.token, is_refund=0) }}" class="btn danger float-right">
+                {% trans %}Cancel Order{% endtrans %}
+            </a>
+        </div>
+        {% elif order.status_human == "fulfilled" %}
+        <div class="col-6 d-flex flex-column align-items-end">
+            <a href="{{ url_for('order.cancel_order', token=order.token, is_refund=1) }}" class="btn danger float-right">
                 {% trans %}Cancel Order{% endtrans %}
             </a>
         </div>
@@ -155,7 +161,7 @@
             </a>
         </div>
         <!-- Task 3.6. Timer and printing shipping label button -->
-        {% elif order.status_human == "canceled" %}
+        {% elif order.status_human == "returned" %}
         <div class="col-6">
             {% if order.order_return %}
                 <div class="d-flex flex-column">
@@ -175,8 +181,6 @@
                     </div>
                     {% endif %}
                 </div>
-            {% else %}
-                <p class="float-right">This order was canceled.</p>
             {% endif %}
         </div>
         {% endif %}
