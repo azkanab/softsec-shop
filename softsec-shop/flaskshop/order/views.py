@@ -11,7 +11,8 @@ from flask import (
     request,
     url_for,
     jsonify,
-    flash
+    flash,
+    current_app
 )
 
 from flask_babel import lazy_gettext
@@ -168,7 +169,49 @@ def generate_shipping_label(order):
 # Task 3.6. - TO DO: PayPal refund
 @login_required
 def paypal_refund(order):
-    return True
+    """
+    The Manager's Script:
+    1. Find the payment paper in our filing cabinet (Database).
+    2. Check if they actually paid with PayPal.
+    3. Use the 'paypal.py' phone to call the bank and ask for a refund.
+    """
+    # 1. Retrieve the payment info from database
+    payment = OrderPayment.query.filter_by(order_id=order.id).first()
+    
+    if not payment:
+        flash("Error: Payment record missing.", "warning")
+        return False
+        
+    # 2. Verify it is a PayPal transaction
+    if payment.payment_method != "paypal":
+        flash("Error: This is not a PayPal order.", "warning")
+        return False
+
+    # 3. Call the refund function we wrote in Step 1
+    # payment.payment_no is the 'Order ID' we saved when they bought the item.
+    try:
+        response = paypal.refund_order(payment.payment_no, order.total)
+    except Exception as e:
+        print(f"Critical Error calling PayPal: {e}")
+        return False
+
+    # 4. Read the answer from PayPal
+    # Status 201 means "Created" (Refund started), 200 means "OK".
+    if response.status_code in (200, 201):
+        try:
+            # We convert the text answer into a Python Dictionary
+            data = json.loads(response.get_data(as_text=True))
+            
+            # If the status is 'COMPLETED' or 'PROCESSING', we succeeded!
+            if data.get("status") in ["COMPLETED", "PROCESSING"]:
+                return True
+        except Exception:
+            # If we can't read the details but the code was Good (200/201), trust it worked.
+            return True
+            
+    # If we get here, the refund failed
+    flash("PayPal refused the refund. Please check logs.", "error")
+    return False
 
 @login_required
 def handle_refund(token):
@@ -191,8 +234,10 @@ def handle_refund(token):
 
     # Task 3.6. - TO DO: Handle refund process for each payment method
     refund_success = True # Just example. Please update this based on the response
+    current_app.logger.info("payment method: %s", payment.payment_method)
     if payment.payment_method == "paypal":
         refund_success = paypal_refund(order)
+        current_app.logger.info("now finished refunding the paypal")
     else:
         pass # Can make a new function to handle other payment methods
     if refund_success:

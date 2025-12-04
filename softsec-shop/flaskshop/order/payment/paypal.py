@@ -1,5 +1,8 @@
 import os
 import logging
+import requests
+import base64
+import json
 
 from flask import Response, current_app
 
@@ -87,4 +90,93 @@ def capture_order(payment_id):
     )
     return Response(
         ApiHelper.json_serialize(order.body), status=200, mimetype="application/json"
+    )
+
+
+#Task 3.6
+
+def get_access_token_manual():
+    """
+    Helper function to get a PayPal Access Token manually.
+    Think of this as logging into PayPal to get a temporary pass-card.
+    """
+    client_id = current_app.config.get("PAYPAL_CLIENT_ID")
+    client_secret = current_app.config.get("PAYPAL_CLIENT_SECRET")
+    
+    # URL for Sandbox (Test Mode). Change to live URL for real money.
+    url = "https://api-m.sandbox.paypal.com/v1/oauth2/token"
+    
+    # We scramble our ID and Secret into a special code (Base64) to log in safely.
+    auth_str = f"{client_id}:{client_secret}"
+    b64_auth = base64.b64encode(auth_str.encode()).decode()
+    
+    headers = {
+        "Authorization": f"Basic {b64_auth}",
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    
+    data = {"grant_type": "client_credentials"}
+    
+    # Send the login request
+    try:
+        response = requests.post(url, headers=headers, data=data)
+        if response.status_code == 200:
+            return response.json().get("access_token")
+    except Exception as e:
+        print(f"Login failed: {e}")
+    
+    return None
+
+def refund_order(order_id, amount):
+    """
+    This function does two things:
+    1. Looks inside the 'Order' folder to find the 'Capture ID' (The Receipt Number).
+    2. Tells PayPal to refund that specific Receipt Number.
+    """
+    # 1. Login to get the access token
+    access_token = get_access_token_manual()
+    if not access_token:
+        return Response(json.dumps({"error": "Could not log into PayPal"}), status=401)
+
+    base_url = "https://api-m.sandbox.paypal.com"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
+    }
+
+    # 2. Look up the Order details
+    # We need to find the 'Capture ID'. You can't refund an 'Order ID' directly.
+    get_order_url = f"{base_url}/v2/checkout/orders/{order_id}"
+    order_res = requests.get(get_order_url, headers=headers)
+    
+    if order_res.status_code != 200:
+        return Response(json.dumps({"error": "Order not found"}), status=404)
+    
+    order_data = order_res.json()
+    
+    # Dig through the data to find the Capture ID
+    try:
+        # Path: purchase_units -> payments -> captures -> id
+        capture_id = order_data['purchase_units'][0]['payments']['captures'][0]['id']
+    except (KeyError, IndexError):
+        return Response(json.dumps({"error": "No captured payment found to refund"}), status=400)
+
+    # 3. Send the Refund Request
+    refund_url = f"{base_url}/v2/payments/captures/{capture_id}/refund"
+    
+    payload = {
+        "amount": {
+            "value": str(amount),
+            "currency_code": "USD" # Ensure this matches your store currency
+        },
+        "note_to_payer": "Refund for order cancellation"
+    }
+    
+    refund_res = requests.post(refund_url, headers=headers, json=payload)
+
+    # Return the result so the Manager (views.py) knows what happened
+    return Response(
+        refund_res.text, 
+        status=refund_res.status_code, 
+        mimetype="application/json"
     )
