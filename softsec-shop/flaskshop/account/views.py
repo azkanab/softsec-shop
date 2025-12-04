@@ -25,7 +25,38 @@ impl = HookimplMarker("flaskshop")
 def index():
     form = ChangePasswordForm(request.form)
     orders = Order.get_current_user_orders()
-    return render_template("account/details.html", form=form, orders=orders)
+
+    # task 3.3. Initialize the QR code data for the tab pane
+    qr_code_base64 = None
+    secret = session.get('otp_secret')
+    
+    # If the user is currently logged in but hasn't started enrollment, start it now
+    if current_user.is_authenticated and 'otp_secret' not in session:
+        session['otp_secret'] = pyotp.random_base32()
+        secret = session['otp_secret']
+        
+    if secret:
+        # Generate QR code data (as done in the original enable_2fa function)
+        uri = pyotp.totp.TOTP(secret).provisioning_uri(
+            name=current_user.email,
+            issuer_name='FlaskShop' 
+        )
+        img = qrcode.make(uri)
+        buf = BytesIO()
+        img.save(buf)
+        qr_code_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    # The form used inside the 2FA tab will be the Verify2FAForm
+    verify_form = Verify2FAForm()
+    
+    # --- END task 3.3 frontend ---
+    
+    return render_template("account/details.html", 
+                           form=form, # ChangePasswordForm
+                           verify_form=verify_form, # New Verify2FAForm
+                           qr_code=qr_code_base64, # QR code data
+                           orders=orders)
+    # return render_template("account/details.html", form=form, orders=orders)
 
 
 def login():
@@ -278,7 +309,6 @@ def flaskshop_load_blueprints(app):
     bp.add_url_rule("/setpwd", view_func=set_password, methods=["POST"])
     bp.add_url_rule("/address", view_func=addresses)
     bp.add_url_rule("/address/edit", view_func=edit_address, methods=["GET", "POST"])
-    bp.add_url_rule("/enable_2fa", view_func=enable_2fa)
     bp.add_url_rule("/verify_2fa", view_func=verify_2fa, methods=["GET", "POST"]) 
     bp.add_url_rule(
         "/address/<int:id>/delete", view_func=delete_address, methods=["POST"]
