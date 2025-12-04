@@ -2,6 +2,8 @@ services:
 
   db:
      image: mysql:8.0
+     ports:
+      - "3306:3306"
      command:
       - --default_authentication_plugin=mysql_native_password
       - --character-set-server=utf8mb4
@@ -12,8 +14,6 @@ services:
      environment:
        MYSQL_ROOT_PASSWORD: root
        MYSQL_DATABASE: flaskshop
-     ports:
-      - "3306:3306"
 
   redis:
     image: library/redis:5.0-alpine
@@ -37,7 +37,7 @@ services:
       - redis
       - elasticsearch
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       DB_URI: mysql+pymysql://root:root@db:3306/flaskshop?charset=utf8mb4
       REDIS_URI: redis://redis:6379
