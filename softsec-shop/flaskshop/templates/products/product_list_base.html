@@ -27,7 +27,76 @@
     <div class="row">
         <div class="col-md-4 col-lg-3">
             <!-- space for filters -->
+             <!-- FILTER SIDEBAR -->
+            <form method="get" id="product-filters" class="card p-3">
+              <h5 class="mb-3">Filters</h5>
+            
+              <!-- Brands -->
+              {% if brand_choices %}
+                <div class="mb-3">
+                  <h6>Brand</h6>
+                  {% for b in brand_choices %}
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="brand" id="brand_{{ loop.index }}" value="{{ b }}"
+                        {% if b in brand %}checked{% endif %}>
+                      <label class="form-check-label" for="brand_{{ loop.index }}">{{ b }}</label>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            
+              <!-- Colors -->
+              {% if color_choices %}
+                <div class="mb-3">
+                  <h6>Color</h6>
+                  {% for c in color_choices %}
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="color" id="color_{{ loop.index }}" value="{{ c }}"
+                        {% if c in color %}checked{% endif %}>
+                      <label class="form-check-label" for="color_{{ loop.index }}">{{ c }}</label>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            
+              <!-- Collar -->
+              {% if collar_choices %}
+                <div class="mb-3">
+                  <h6>Collar</h6>
+                  {% for col in collar_choices %}
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="collar" id="collar_{{ loop.index }}" value="{{ col }}"
+                        {% if col in collar %}checked{% endif %}>
+                      <label class="form-check-label" for="collar_{{ loop.index }}">{{ col }}</label>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            
+              <!-- Price range -->
+              <div class="mb-3">
+                <h6>Price</h6>
+                <div class="d-flex gap-2">
+                  <input class="form-control" type="number" step="0.01" min ="0" name="price_from" placeholder="Min" value="{{ price_from or '' }}">
+                  <input class="form-control" type="number" step="0.01" min ="0" name="price_to" placeholder="Max" value="{{ price_to or '' }}">
+                </div>
+              </div>
+            
+              <!-- Preserve sort_by if present so applying filters keeps sorting -->
+              {% if request.args.get('sort_by') %}
+                <input type="hidden" name="sort_by" value="{{ request.args.get('sort_by') }}">
+              {% endif %}
+            
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+                <a class="btn btn-outline-secondary btn-sm" href="{{ request.path }}">Reset</a>
+              </div>
+</form>
+<!-- END FILTER SIDEBAR -->
+
+
         </div>
+
         <div class="col-md-8 col-lg-9 product-list">
             <div class="product-list__header">
                 <div class="product-list__header__title">
@@ -42,7 +111,7 @@
                         {% trans %}Filters{% endtrans %}
                     </h3>
                     <div class="sort-by">
-                        <div class="click-area d-none"></div>
+                        <!-- <div class="L-area d-none"></div> -->
                         <button class="btn btn-link">
                             <div>
                             <span>

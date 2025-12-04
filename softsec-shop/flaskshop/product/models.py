@@ -1,6 +1,7 @@
 import itertools
 
 from flask import current_app, request, url_for
+from sqlalchemy import cast, Integer
 from sqlalchemy import desc
 from sqlalchemy.ext.mutable import MutableDict
 
@@ -672,19 +673,71 @@ class ProductCollection(Model):
         target.clear_mc(target)
 
 
+
+def handle_attribute_filter(query, attribute_title, selected_values):
+    attr = ProductAttribute.query.filter_by(title=attribute_title).first()
+    if not attr:
+        return query, []
+
+    all_choices_qs = (
+        AttributeChoiceValue.query
+        .filter(AttributeChoiceValue.attribute_id == attr.id)
+        .order_by(AttributeChoiceValue.id)
+        .all()
+    )
+    all_titles = [v.title for v in all_choices_qs]
+
+    if selected_values:
+        matched_vals = (
+            AttributeChoiceValue.query
+            .filter(
+                AttributeChoiceValue.attribute_id == attr.id,
+                AttributeChoiceValue.title.in_(selected_values),
+            )
+            .all()
+        )
+        matched_ids = [int(v.id) for v in matched_vals]
+        if matched_ids:
+            json_value_expr = Product.attributes[str(attr.id)]
+            query = query.filter(cast(json_value_expr, Integer).in_(matched_ids))
+
+    return query, all_titles
+
+
+
+
 def get_product_list_context(query, obj):
     """
-    obj: collection or category, to get it`s attr_filter.
+    obj: collection or category, to get its attr_filter.
+    Adds Brand/Color/Collar + price range + sorting support.
+    Returns (args_dict, query).
     """
     args_dict = {}
-    price_from = request.args.get("price_from", "", type=int)
-    price_to = request.args.get("price_to", "", type=int)
-    if price_from:
-        query = query.filter(Product.basic_price > price_from)
-    if price_to:
-        query = query.filter(Product.basic_price < price_to)
+
+    # ---- Price range filters ----
+    # IMPORTANT: no "" default, so this returns float or None
+    price_from = request.args.get("price_from", type=float)
+    price_to = request.args.get("price_to", type=float)
+
+    # Prevent negative values
+    if price_from is not None and price_from < 0:
+        price_from = 0.0
+    if price_to is not None and price_to < 0:
+        price_to = 0.0
+
+    # Optional: if user swaps them (50–10), fix to 10–50
+    if price_from is not None and price_to is not None and price_from > price_to:
+        price_from, price_to = price_to, price_from
+
+    # Apply to query
+    if price_from is not None:
+        query = query.filter(Product.basic_price >= price_from)
+    if price_to is not None:
+        query = query.filter(Product.basic_price <= price_to)
+
     args_dict.update(price_from=price_from, price_to=price_to)
 
+    # ---- Sorting (existing) ----
     sort_by_choices = {"title": "title", "basic_price": "price"}
     arg_sort_by = request.args.get("sort_by", "")
     is_descending = False
@@ -702,6 +755,61 @@ def get_product_list_context(query, obj):
         now_sorted_by=now_sorted_by,
         is_descending=is_descending,
     )
+
+    # ---- Attribute filters: Brand, Color, Collar ----
+    selected_brands = request.args.getlist("brand")
+    selected_colors = request.args.getlist("color")
+    selected_collars = request.args.getlist("collar")
+
+    query, brand_choices = handle_attribute_filter(query, "Brand", selected_brands)
+    query, color_choices = handle_attribute_filter(query, "Color", selected_colors)
+    query, collar_choices = handle_attribute_filter(query, "Collar", selected_collars)
+
+    args_dict.update(
+        brand=selected_brands,
+        color=selected_colors,
+        collar=selected_collars,
+        brand_choices=brand_choices,
+        color_choices=color_choices,
+        collar_choices=collar_choices,
+    )
+
+    # keep existing flags
+    args_dict.update(default_attr={})
+    if request.args:
+        args_dict.update(clear_filter=True)
+
+    return args_dict, query
+
+    #args_dict = {}
+    #price_from = request.args.get("price_from", "", type=int)
+    #price_to = request.args.get("price_to", "", type=int)
+    #if price_from:
+    #    query = query.filter(Product.basic_price > price_from)
+    #if price_to:
+    #    query = query.filter(Product.basic_price < price_to)
+    #args_dict.update(price_from=price_from, price_to=price_to)
+#
+    #sort_by_choices = {"title": "title", "basic_price": "price"}
+    #arg_sort_by = request.args.get("sort_by", "")
+    #is_descending = False
+    #if arg_sort_by.startswith("-"):
+    #    is_descending = True
+    #    arg_sort_by = arg_sort_by[1:]
+    #if arg_sort_by in sort_by_choices:
+    #    if is_descending:
+    #        query = query.order_by(desc(getattr(Product, arg_sort_by)))
+    #    else:
+    #        query = query.order_by(getattr(Product, arg_sort_by))
+    #now_sorted_by = arg_sort_by or "title"
+    #args_dict.update(
+    #    sort_by_choices=sort_by_choices,
+    #    now_sorted_by=now_sorted_by,
+    #    is_descending=is_descending,
+    #)
+
+
+
 
     # Could this place be relevant for a task?
 
