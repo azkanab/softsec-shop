@@ -57,3 +57,6 @@ migrations/
 /venv/
 /women_shop_empty.backup
 /.flaskenv
+
+# Return shipping label folder (pdf & png)
+flaskshop/static/shipping_label/
