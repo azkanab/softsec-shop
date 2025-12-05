@@ -38,7 +38,7 @@ window.paypal
             throw new Error(errorMessage);
         } catch (error) {
             console.error(error);
-            errorMessage(`Could not initiate PayPal Checkout...<br><br>${error}`);
+            alert(`Could not initiate PayPal Checkout, please try again later. Error: ${error}`);
         }
     },
 
@@ -78,9 +78,7 @@ window.paypal
             }
         } catch (error) {
             console.error(error);
-            errorMessage(
-            `Sorry, your transaction could not be processed...<br><br>${error}`
-            );
+            alert(`Sorry, your PayPal transaction could not be processed... Please try again later. Error: ${error}`);
         }
     },
 })

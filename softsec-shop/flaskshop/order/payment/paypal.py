@@ -58,22 +58,37 @@ def create_order(total_amount):
     client = get_paypal_client()
     orders_controller = client.orders
 
-    order = orders_controller.create_order(
-        {
-            "body": OrderRequest(
-                intent=CheckoutPaymentIntent.CAPTURE,
-                purchase_units=[
-                    PurchaseUnitRequest(
-                        AmountWithBreakdown(currency_code="USD", value=str(total_amount))
-                    )
-                ],
-            ),
-            "prefer": "return=representation",
-        }
-    )
-    return Response(
-        ApiHelper.json_serialize(order.body), status=200, mimetype="application/json"
-    )
+    try:
+        result = orders_controller.create_order(
+            {
+                "body": OrderRequest(
+                    intent=CheckoutPaymentIntent.CAPTURE,
+                    purchase_units=[
+                        PurchaseUnitRequest(
+                            AmountWithBreakdown(currency_code="USD", value=str(total_amount))
+                        )
+                    ],
+                ),
+                "prefer": "return=representation",
+            }
+        )
+        if result.is_success():
+            return Response(
+                ApiHelper.json_serialize(result.body), status=200, mimetype="application/json"
+            )
+        elif result.is_error():
+            return Response(
+                ApiHelper.json_serialize(result.errors), status=500, mimetype="application/json"
+            )
+
+    except ErrorException as e: 
+        return Response(
+            ApiHelper.json_serialize(e), status=500, mimetype="application/json"
+        )
+    except ApiException as e: 
+        return Response(
+            ApiHelper.json_serialize(e), status=500, mimetype="application/json"
+        )
 
 
 """
@@ -87,24 +102,55 @@ def capture_order(payment_id):
     client = get_paypal_client()
     orders_controller = client.orders
 
-    order = orders_controller.capture_order(
-        {"id": payment_id, "prefer": "return=representation"}
-    )
-    return Response(
-        ApiHelper.json_serialize(order.body), status=200, mimetype="application/json"
-    )
+    try:
+        result = orders_controller.capture_order(
+            {"id": payment_id, "prefer": "return=representation"}
+        )
+        if result.is_success():
+            return Response(
+                ApiHelper.json_serialize(result.body), status=200, mimetype="application/json"
+            )
+        elif result.is_error():
+            return Response(
+                ApiHelper.json_serialize(result.errors), status=500, mimetype="application/json"
+            )
+
+    except ErrorException as e: 
+        return Response(
+            ApiHelper.json_serialize(e), status=500, mimetype="application/json"
+        )
+    except ApiException as e: 
+        return Response(
+            ApiHelper.json_serialize(e), status=500, mimetype="application/json"
+        )
 
 # Task 3.6. Helper to get order
 def get_order(payment_id):
     client = get_paypal_client()
     orders_controller = client.orders
 
-    order = orders_controller.get_order(
-        {"id": payment_id}
-    )
-    return Response(
-        ApiHelper.json_serialize(order.body), status=200, mimetype="application/json"
-    )
+    try:
+        result = orders_controller.get_order(
+            {"id": payment_id}
+        )
+        if result.is_success():
+            return Response(
+                ApiHelper.json_serialize(result.body), status=200, mimetype="application/json"
+            )
+        elif result.is_error():
+            return Response(
+                ApiHelper.json_serialize(result.errors), status=500, mimetype="application/json"
+            )
+
+    except ErrorException as e: 
+        return Response(
+            ApiHelper.json_serialize(e), status=500, mimetype="application/json"
+        )
+    except ApiException as e: 
+        return Response(
+            ApiHelper.json_serialize(e), status=500, mimetype="application/json"
+        )
+
 
 # Task 3.6. Helper to get capture_id
 def get_capture_id(payment_id):

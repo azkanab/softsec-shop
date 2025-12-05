@@ -16,7 +16,8 @@ from flask import (
     jsonify,
     flash,
     current_app,
-    send_file
+    send_file,
+    Response
 )
 
 from flask_babel import lazy_gettext
@@ -73,11 +74,15 @@ def create_payment(token, payment_method):
     if payment_method == "paypal":
         response = paypal.create_order(order.total)
         response_json = response.get_data(as_text=True)
-        response_data = json.loads(response_json)
-        # Task 3.5 Step 1: Set payment_no in the database with the payment ID generated from Paypal REST API
-        payment.set_payment_no(response_data["id"])
-        payment.save()
-        return response
+        success = response.status_code == 200
+        if success:
+            response_data = json.loads(response_json)
+            # Task 3.5 Step 1: Set payment_no in the database with the payment ID generated from Paypal REST API
+            payment.set_payment_no(response_data["id"])
+            payment.save()
+            return response
+        else:
+            return Response({"error": "Failed to create PayPal payment"}, status=400)
     elif payment_method == "alipay":
         redirect_url = zhifubao.send_order(order.token, payment_no, order.total)
         payment.redirect_url = redirect_url
