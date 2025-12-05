@@ -161,7 +161,7 @@
             </a>
         </div>
         <!-- Task 3.6. Timer and printing shipping label button -->
-        {% elif order.status_human == "returned" %}
+        {% elif order.status_human == "canceled" or order.status_human == "returned" %}
         <div class="col-6">
             {% if order.order_return %}
                 <div class="d-flex flex-column">
@@ -173,7 +173,7 @@
                         Time since cancellation:&nbsp;
                         <span id="timerDisplay" style="font-weight: normal;">--:--:--</span>
                     </div>
-                    {% if order.order_return.status_human == "label_created" %}
+                    {% if order.status_human == "canceled" and order.order_return.status_human == "label_created" %}
                     <div class="d-flex justify-content-end">
                         <a href="#" id="cancelReturnBtn" data-token="{{ order.token }}" class="btn btn-primary">
                             {% trans %}Print return shipping label{% endtrans %}

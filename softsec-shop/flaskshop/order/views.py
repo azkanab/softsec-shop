@@ -1,7 +1,10 @@
 import time
-import random
 from datetime import datetime, timezone
 import json
+import base64
+from flask import current_app
+from pathlib import Path
+
 
 from flask import (
     Blueprint,
@@ -23,6 +26,7 @@ from flaskshop.constant import OrderStatusKinds, PaymentStatusKinds, ShipStatusK
 from flaskshop.extensions import csrf_protect
 from .payment import zhifubao
 from .payment import paypal
+from .shipping import dhl
 
 from .models import Order, OrderPayment, OrderReturn, OrderRefund
 
@@ -159,12 +163,44 @@ def cancel_order(token, is_refund):
         flash(lazy_gettext("Your order has been cancelled"), "success")
     return render_template("orders/details.html", order=order)
 
+# Task 3.6. Decode base 64 from DHL response to a file
+def decode_base_64(b64, type, order_token):
+    
+    shipping_label_dir = Path(current_app.static_folder) / "shipping_label"
+    shipping_label_dir.mkdir(parents=True, exist_ok=True)
+    
+    bytes = base64.b64decode(b64)
+    
+    if type == "pdf":
+        filename = f"{order_token}.pdf"
+    else:
+        filename = f"{order_token}.png"
+    
+    local_path = shipping_label_dir / filename
+    
+    with open(local_path, "wb") as f:
+        f.write(bytes)
+    
+    return f"/static/shipping_label/{filename}"
+
+# Task 3.6. Create a DHL Shipping Label for return an order and save it in folder /static/shipping_label
 def generate_shipping_label(order):
-    # Task 3.6 - TO DO: Generate shipping label
 
+    response = dhl.get_dhl_return_shipping_label(order)
 
-    shipping_label_url = f"/static/shipping_label/{order.token}.png"
-    return shipping_label_url
+    data = response.json()
+
+    # Task 3.6. Processing PDF file
+    pdf_url = None
+    if "label" in data and "b64" in data["label"]:
+        pdf_url = decode_base_64(data["label"]["b64"], "pdf", order.token)
+    
+    # Task 3.6. Processing PNG File
+    qr_png_url = None
+    if "qrLabel" in data and "b64" in data["qrLabel"]:
+        qr_png_url = decode_base_64(data["qrLabel"]["b64"], "png", order.token)
+
+    return qr_png_url, pdf_url
 
 # Task 3.6. - TO DO: PayPal refund
 @login_required
@@ -266,7 +302,7 @@ def cancel_return_order(token):
     # Task 3.6. - Set status in order_order table to canceled and status in order_event table to order_canceled
     order.cancel()
 
-    shipping_label_url = generate_shipping_label(order)
+    shipping_qr_url, shipping_label_url = generate_shipping_label(order)
 
     # Task 3.6. - Create a new row for OrderReturn
     returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
@@ -276,12 +312,12 @@ def cancel_return_order(token):
             status=OrderReturnStatusKinds.label_created.value,
             shipping_label=shipping_label_url,
             cancellation_time=datetime.now(timezone.utc),
-            carrier=random.choice(["UPC", "DHL"])
+            carrier="DHL"
         )
 
     return jsonify({
         "success": True,
-        "shipping_label_url": shipping_label_url,
+        "shipping_label_url": shipping_qr_url,
         "order_token": order.token,
         "cancellation_time": returnOrder.cancellation_time
     })
@@ -304,6 +340,16 @@ def send_return(token):
             "message": "Data not found in the table"
         })
     
+    # ---- IMPORTANT ----
+    # Get the PDF LOCAL PATH saved earlier
+    pdf_url = returnOrder.shipping_label
+
+    if not pdf_url:
+        return jsonify({
+            "success": False,
+            "message": "Shipping label not generated yet"
+        })
+
     flash(lazy_gettext("Your return will be picked up soon. Do not lose the shipping label and please attach it to your package"), "success")
 
     order.update(
@@ -312,7 +358,8 @@ def send_return(token):
 
     return jsonify({
         "success": True,
-        "message": "The status is already updated"
+        "message": "The status is already updated",
+        "pdf_url": pdf_url
     })
 
 @login_required

@@ -87,6 +87,13 @@ class Config:
     # Config for Paypal
     PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "")
     PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "")
+    
+    #Config for DHL
+    DHL_API_KEY = os.getenv("DHL_API_KEY", "")
+    DHL_API_SECRET = os.getenv("DHL_API_SECRET", "")
+    DHL_API_URL = os.getenv("DHL_API_URL", "")
+    DHL_USERNAME = os.getenv("DHL_USERNAME", "")
+    DHL_PASSWORD = os.getenv("DHL_PASSWORD", "")
 
 
 class ProdConfig(Config):

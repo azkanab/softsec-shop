@@ -100,13 +100,16 @@ if (printSendBtn) {
                 })
                 .then(response => response.json())
                 .then(data => {
-                if (data.success) {
-                        labelModal.style.display = 'none';
+                        if (data.success) {
+                                if (data.pdf_url) {
+                                        window.open(data.pdf_url, "_blank");
+                                }
+                                labelModal.style.display = 'none';
 
-                        window.location.reload();
-                } else {
-                        alert('Error sending return. Please try again.');
-                }
+                                window.location.reload();
+                        } else {
+                                alert('Error sending return. Please try again.');
+                        }
                 })
                 .catch(error => {
                         console.error('Error:', error);
