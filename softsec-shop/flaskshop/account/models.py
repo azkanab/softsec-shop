@@ -21,6 +21,10 @@ class User(Model, UserMixin):
     open_id = Column(db.String(80), index=True)
     session_key = Column(db.String(80), index=True)
 
+    # # --- 3.3 implement 2FA ---
+    totp_secret = Column(db.String(16))  # to store the unique key
+    is_2fa_enabled = Column(db.Boolean(), default=False)  # to track status of 2FA
+
     def __init__(self, username, email, password, **kwargs):
         super().__init__(username=username, email=email, password=password, **kwargs)
 

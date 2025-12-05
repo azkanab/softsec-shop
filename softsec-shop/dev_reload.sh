@@ -1,2 +1,2 @@
 #!/bin/bash
-docker compose up -d --force-recreate web
+docker compose up -d --build --force-recreate web

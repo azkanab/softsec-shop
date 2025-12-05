@@ -31,6 +31,12 @@
       </li>
 
       <li class="nav-item" role="presentation">
+        <a class="nav-link" data-bs-toggle="tab" data-bs-target="#two-factor" href="#" role="tab">
+            <h3>{% trans %}Enable 2FA{% endtrans %}</h3>
+        </a>
+    </li>
+
+      <li class="nav-item" role="presentation">
         <a class="nav-link" data-bs-toggle="tab" data-bs-target="#addresses" href="#" role="tab">
           <h3>{% trans %}Addresses book{% endtrans %}</h3>
         </a>
@@ -108,6 +114,31 @@
           </form>
         </div>
       </div>
+    </div>
+    <div class="tab-pane fade" id="two-factor" role="tabpanel">
+        <div class="row">
+            <div class="col-md-8 col-lg-6 m-auto">
+                
+                <h1>{% trans %}Enable Two-Factor Authentication{% endtrans %}</h1>
+                
+                <p>{% trans %}Please scan the QR code below with your authenticator app (e.g., Google Authenticator, Authy).{% endtrans %}</p>
+
+                {% if qr_code %}
+                    {# ADDED STYLE: max-width: 100% to make the image responsive #}
+                    <img src="data:image/png;base64,{{ qr_code }}" alt="2FA QR Code" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">
+                {% endif %}
+
+                <h2 class="mt-4">{% trans %}Verification{% endtrans %}</h2>
+                <p>{% trans %}Once scanned, enter the 6-digit code displayed in your app to confirm activation.{% endtrans %}</p>
+                
+                <form method="POST" action="{{ url_for('account.verify_2fa') }}">
+                    {{ verify_form.csrf_token }} 
+                    {{ render_field(verify_form.otp_code) }}
+                    
+                    <button type="submit" class="btn btn-primary narrow">{% trans %}Verify and Enable{% endtrans %}</button>
+                </form>
+            </div>
+        </div>
     </div>
     <div class="tab-pane fade" id="addresses" role="tabpanel">
       <div class="card-deck-wrapper account__addresses">
