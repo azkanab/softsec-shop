@@ -1,5 +1,6 @@
 import requests
 import json
+from flaskshop.utils import detect_postal_and_country
 
 from flask import current_app
 
@@ -11,17 +12,29 @@ def get_dhl_return_shipping_label(order):
     DHL_PASSWORD = current_app.config.get("DHL_PASSWORD")
     
     address = order.shipping_address
-    
+
     # Task 3.6.: Build payload request
-    shipper = {
-        "name1": address.contact_name,
-        "addressStreet": address.address,
-        "addressHouse": "1",
-        "postalCode": "21073",
-        "city": address.city,
-        "country": "DE",
-        "phone": address.contact_phone
-    }
+    if not address: # Fallback address
+        shipper = {
+            "name1": "Technische Universität Hamburg",
+            "addressStreet": "Am Schwarzenberg-Campus",
+            "addressHouse": "1",
+            "postalCode": "21073",
+            "city": "Hamburg",
+            "country": "DE",
+            "phone": "+4942359873804"
+        }
+    else:
+        postal, country = detect_postal_and_country(address.address)
+        shipper = {
+            "name1": address.contact_name,
+            "addressStreet": address.address,
+            "addressHouse": "1",
+            "postalCode": postal,
+            "city": address.city,
+            "country": country,
+            "phone": address.contact_phone
+        }
 
     payload = {
         "receiverId": "deu",

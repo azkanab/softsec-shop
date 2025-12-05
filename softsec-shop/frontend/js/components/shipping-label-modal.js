@@ -102,8 +102,10 @@ if (printSendBtn) {
                 .then(data => {
                         if (data.success) {
                                 if (data.pdf_url) {
-                                        window.open(data.pdf_url, "_blank");
+                                        const filename = data.pdf_url.split("/").pop();
+                                        window.open(`/orders/download/label/${filename}`, "_blank");
                                 }
+
                                 labelModal.style.display = 'none';
 
                                 window.location.reload();

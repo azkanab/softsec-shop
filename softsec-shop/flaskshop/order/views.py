@@ -15,7 +15,8 @@ from flask import (
     url_for,
     jsonify,
     flash,
-    current_app
+    current_app,
+    send_file
 )
 
 from flask_babel import lazy_gettext
@@ -391,6 +392,20 @@ def receive(token):
     )
     return render_template("orders/details.html", order=order)
 
+@login_required
+def download_shipping_label(filename):
+
+    pdf_path = Path(current_app.static_folder) / "shipping_label" / filename
+
+    if not pdf_path.exists():
+        abort(404)
+
+    return send_file(
+        pdf_path,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=filename
+    )
 
 @impl
 def flaskshop_load_blueprints(app):
@@ -410,4 +425,6 @@ def flaskshop_load_blueprints(app):
     bp.add_url_rule("/receive_return/<string:token>", view_func=receive_return, methods=["GET", "POST"])
     bp.add_url_rule("/refund/<string:token>", view_func=handle_refund, methods=["GET", "POST"])
     bp.add_url_rule("/receive/<string:token>", view_func=receive)
+    bp.add_url_rule("/download/label/<string:filename>", view_func=download_shipping_label)
+
     app.register_blueprint(bp, url_prefix="/orders")
