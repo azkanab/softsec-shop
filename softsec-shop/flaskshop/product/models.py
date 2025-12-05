@@ -714,22 +714,17 @@ def get_product_list_context(query, obj):
     """
     args_dict = {}
 
-    # ---- Price range filters ----
-    # IMPORTANT: no "" default, so this returns float or None
     price_from = request.args.get("price_from", type=float)
     price_to = request.args.get("price_to", type=float)
 
-    # Prevent negative values
     if price_from is not None and price_from < 0:
         price_from = 0.0
     if price_to is not None and price_to < 0:
         price_to = 0.0
 
-    # Optional: if user swaps them (50–10), fix to 10–50
     if price_from is not None and price_to is not None and price_from > price_to:
         price_from, price_to = price_to, price_from
 
-    # Apply to query
     if price_from is not None:
         query = query.filter(Product.basic_price >= price_from)
     if price_to is not None:
@@ -737,7 +732,6 @@ def get_product_list_context(query, obj):
 
     args_dict.update(price_from=price_from, price_to=price_to)
 
-    # ---- Sorting (existing) ----
     sort_by_choices = {"title": "title", "basic_price": "price"}
     arg_sort_by = request.args.get("sort_by", "")
     is_descending = False
@@ -756,7 +750,6 @@ def get_product_list_context(query, obj):
         is_descending=is_descending,
     )
 
-    # ---- Attribute filters: Brand, Color, Collar ----
     selected_brands = request.args.getlist("brand")
     selected_colors = request.args.getlist("color")
     selected_collars = request.args.getlist("collar")
@@ -773,45 +766,6 @@ def get_product_list_context(query, obj):
         color_choices=color_choices,
         collar_choices=collar_choices,
     )
-
-    # keep existing flags
-    args_dict.update(default_attr={})
-    if request.args:
-        args_dict.update(clear_filter=True)
-
-    return args_dict, query
-
-    #args_dict = {}
-    #price_from = request.args.get("price_from", "", type=int)
-    #price_to = request.args.get("price_to", "", type=int)
-    #if price_from:
-    #    query = query.filter(Product.basic_price > price_from)
-    #if price_to:
-    #    query = query.filter(Product.basic_price < price_to)
-    #args_dict.update(price_from=price_from, price_to=price_to)
-#
-    #sort_by_choices = {"title": "title", "basic_price": "price"}
-    #arg_sort_by = request.args.get("sort_by", "")
-    #is_descending = False
-    #if arg_sort_by.startswith("-"):
-    #    is_descending = True
-    #    arg_sort_by = arg_sort_by[1:]
-    #if arg_sort_by in sort_by_choices:
-    #    if is_descending:
-    #        query = query.order_by(desc(getattr(Product, arg_sort_by)))
-    #    else:
-    #        query = query.order_by(getattr(Product, arg_sort_by))
-    #now_sorted_by = arg_sort_by or "title"
-    #args_dict.update(
-    #    sort_by_choices=sort_by_choices,
-    #    now_sorted_by=now_sorted_by,
-    #    is_descending=is_descending,
-    #)
-
-
-
-
-    # Could this place be relevant for a task?
 
     args_dict.update(default_attr={})
     if request.args:
