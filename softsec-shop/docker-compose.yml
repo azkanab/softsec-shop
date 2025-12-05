@@ -37,7 +37,7 @@ services:
       - redis
       - elasticsearch
     ports:
-      - "5001:5000"
+      - "5000:5000"
     environment:
       DB_URI: mysql+pymysql://root:root@db:3306/flaskshop?charset=utf8mb4
       REDIS_URI: redis://redis:6379
