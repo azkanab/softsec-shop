@@ -1,4 +1,4 @@
-# **Softsec-shop Setup Guide**
+# **Group 5 - Softsec-shop Setup Guide**
 
 *For full documentation, please refer to our Notion workspace:*
 **[https://www.notion.so/Secure-Software-Application-Project-Team-5-29daaa8c79d7806887c6f590ae937ee3](https://www.notion.so/Secure-Software-Application-Project-Team-5-29daaa8c79d7806887c6f590ae937ee3)**
