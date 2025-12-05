@@ -22,14 +22,15 @@ https://github.com/FiloSottile/mkcert/releases
 
 ---
 
-### **MacOS**  
+### **Install certificate** 
 *(Required once per machine)*
 
 ```bash
 mkcert -install
 ```
 ---
-### **Windows**
+### **MacOS** 
+
 ```bash
 brew install mkcert
 ```
