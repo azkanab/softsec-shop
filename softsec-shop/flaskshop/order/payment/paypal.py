@@ -6,6 +6,8 @@ import json
 
 from flask import Response, current_app
 
+from paypalserversdk.exceptions.error_exception import ErrorException
+from paypalserversdk.exceptions.api_exception import ApiException
 from paypalserversdk.http.auth.o_auth_2 import ClientCredentialsAuthCredentials
 from paypalserversdk.logging.configuration.api_logging_configuration import (
     LoggingConfiguration,
@@ -92,91 +94,65 @@ def capture_order(payment_id):
         ApiHelper.json_serialize(order.body), status=200, mimetype="application/json"
     )
 
+# Task 3.6. Helper to get order
+def get_order(payment_id):
+    client = get_paypal_client()
+    orders_controller = client.orders
 
-#Task 3.6
+    order = orders_controller.get_order(
+        {"id": payment_id}
+    )
+    return Response(
+        ApiHelper.json_serialize(order.body), status=200, mimetype="application/json"
+    )
 
-def get_access_token_manual():
-    """
-    Helper function to get a PayPal Access Token manually.
-    Think of this as logging into PayPal to get a temporary pass-card.
-    """
-    client_id = current_app.config.get("PAYPAL_CLIENT_ID")
-    client_secret = current_app.config.get("PAYPAL_CLIENT_SECRET")
-    
-    # URL for Sandbox (Test Mode). Change to live URL for real money.
-    url = "https://api-m.sandbox.paypal.com/v1/oauth2/token"
-    
-    # We scramble our ID and Secret into a special code (Base64) to log in safely.
-    auth_str = f"{client_id}:{client_secret}"
-    b64_auth = base64.b64encode(auth_str.encode()).decode()
-    
-    headers = {
-        "Authorization": f"Basic {b64_auth}",
-        "Content-Type": "application/x-www-form-urlencoded"
-    }
-    
-    data = {"grant_type": "client_credentials"}
-    
-    # Send the login request
+# Task 3.6. Helper to get capture_id
+def get_capture_id(payment_id):
     try:
-        response = requests.post(url, headers=headers, data=data)
-        if response.status_code == 200:
-            return response.json().get("access_token")
-    except Exception as e:
-        print(f"Login failed: {e}")
-    
-    return None
+        response = get_order(payment_id)
 
+        order_data = json.loads(response.get_data(as_text=True))
+
+        capture_id = order_data['purchase_units'][0]['payments']['captures'][0]['id']
+
+        return capture_id
+    except (KeyError, IndexError):
+        return -1
+
+# Task 3.6. - Refund Order
 def refund_order(order_id, amount):
     """
     This function does two things:
     1. Looks inside the 'Order' folder to find the 'Capture ID' (The Receipt Number).
     2. Tells PayPal to refund that specific Receipt Number.
     """
-    # 1. Login to get the access token
-    access_token = get_access_token_manual()
-    if not access_token:
-        return Response(json.dumps({"error": "Could not log into PayPal"}), status=401)
-
-    base_url = "https://api-m.sandbox.paypal.com"
-    headers = {
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json"
-    }
-
-    # 2. Look up the Order details
-    # We need to find the 'Capture ID'. You can't refund an 'Order ID' directly.
-    get_order_url = f"{base_url}/v2/checkout/orders/{order_id}"
-    order_res = requests.get(get_order_url, headers=headers)
-    
-    if order_res.status_code != 200:
-        return Response(json.dumps({"error": "Order not found"}), status=404)
-    
-    order_data = order_res.json()
-    
-    # Dig through the data to find the Capture ID
-    try:
-        # Path: purchase_units -> payments -> captures -> id
-        capture_id = order_data['purchase_units'][0]['payments']['captures'][0]['id']
-    except (KeyError, IndexError):
+    capture_id = get_capture_id(order_id)
+    if capture_id == -1:
         return Response(json.dumps({"error": "No captured payment found to refund"}), status=400)
 
-    # 3. Send the Refund Request
-    refund_url = f"{base_url}/v2/payments/captures/{capture_id}/refund"
-    
-    payload = {
-        "amount": {
-            "value": str(amount),
-            "currency_code": "USD" # Ensure this matches your store currency
-        },
-        "note_to_payer": "Refund for order cancellation"
+    client = get_paypal_client()
+    payments_controller = client.payments
+    collect = {
+        'capture_id': capture_id,
+        'prefer': 'return=minimal'
     }
-    
-    refund_res = requests.post(refund_url, headers=headers, json=payload)
 
-    # Return the result so the Manager (views.py) knows what happened
-    return Response(
-        refund_res.text, 
-        status=refund_res.status_code, 
-        mimetype="application/json"
-    )
+    try:
+        result = payments_controller.refund_captured_payment(collect)
+        if result.is_success():
+            return Response(
+                ApiHelper.json_serialize(result.body), status=200, mimetype="application/json"
+            )
+        elif result.is_error():
+            return Response(
+                ApiHelper.json_serialize(result.errors), status=500, mimetype="application/json"
+            )
+
+    except ErrorException as e: 
+        return Response(
+            ApiHelper.json_serialize(e), status=500, mimetype="application/json"
+        )
+    except ApiException as e: 
+        return Response(
+            ApiHelper.json_serialize(e), status=500, mimetype="application/json"
+        )

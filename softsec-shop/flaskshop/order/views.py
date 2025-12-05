@@ -268,14 +268,12 @@ def handle_refund(token):
             payment_no=payment_no
         )
 
-    # Task 3.6. - TO DO: Handle refund process for each payment method
-    refund_success = True # Just example. Please update this based on the response
-    current_app.logger.info("payment method: %s", payment.payment_method)
+    # Task 3.6. - Handle refund process for each payment method
+    refund_success = True
     if payment.payment_method == "paypal":
         refund_success = paypal_refund(order)
-        current_app.logger.info("now finished refunding the paypal")
     else:
-        pass # Can make a new function to handle other payment methods
+        pass # Can make a new function to handle other payment methods (if there is any)
     if refund_success:
         refund.update(
             status=RefundStatusKinds.confirmed.value,
