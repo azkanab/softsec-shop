@@ -32,6 +32,11 @@
 
                             <a href="{{ url_for('dashboard.user_edit', user_id=user.id) }}"
                                class="btn btn-primary d-block mb-2"><b>{% trans %}Edit{% endtrans %}</b></a>
+                            <!-- Task 3.2. - Add report suspicious activity button on a particular user on dashboard -->
+                            <a class="btn btn-danger d-block mb-2"
+                               data-report-url="users/{{ user.id }}/report"
+                               data-bs-toggle="modal" data-bs-target="#reportModal"
+                            ><b>{% trans %}Report suspicious activity{% endtrans %}</b></a>
                             <a class="btn btn-danger d-block"
                                data-delete-url="users/{{ user.id }}/delete"
                                data-redirect-url="/dashboard/users"

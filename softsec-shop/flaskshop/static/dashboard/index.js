@@ -69,6 +69,60 @@ deleteModal.addEventListener('show.bs.modal', event => {
     })
 })
 
+// Task 3.2 - Handle modal for reporting suspicious activity on a particular user button
+const reportModal = document.getElementById('reportModal')
+    reportModal.addEventListener('show.bs.modal', event => {
+    const triggerBtn = event.relatedTarget
+    const reportUrl = triggerBtn.dataset.reportUrl
+    const confirmBtn = document.getElementById('confirmReport')
+    const reportToast = document.getElementById('reportToast')
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    confirmBtn.addEventListener('click', () => {
+        fetch(`/dashboard/${reportUrl}`, {method: 'PUT', headers: {'X-CSRF-Token': csrfToken}}).then(response => {
+            if(response.ok){
+                return response.json()
+            }
+            throw new Error('Network was not ok!')
+        }).then(data => {
+            if (data.code === 0) {
+                const toast = new bootstrap.Toast(reportToast)
+                toast.show()
+                const modal = bootstrap.Modal.getInstance(reportModal);
+                modal.hide()
+            } else {
+                console.log(data)
+            }
+        })
+    })
+})
+
+// Task 3.2 - Handle modal for reporting data breach on all users button
+const reportAllUsersBreachModal = document.getElementById('reportBreachModal')
+    reportAllUsersBreachModal.addEventListener('show.bs.modal', event => {
+    const triggerBtn = event.relatedTarget
+    const reportUrl = triggerBtn.dataset.reportUrl
+    const confirmBtn = document.getElementById('confirmBreachReport')
+    const reportBreachToast = document.getElementById('reportBreachToast')
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    confirmBtn.addEventListener('click', () => {
+        fetch(`/dashboard/${reportUrl}`, {method: 'PUT', headers: {'X-CSRF-Token': csrfToken}}).then(response => {
+            if(response.ok){
+                return response.json()
+            }
+            throw new Error('Network was not ok!')
+        }).then(data => {
+            if (data.code === 0) {
+                const toast = new bootstrap.Toast(reportBreachToast)
+                toast.show()
+                const modal = bootstrap.Modal.getInstance(reportAllUsersBreachModal);
+                modal.hide()
+            } else {
+                console.log(data)
+            }
+        })
+    })
+})
+
 // 所有的select使用tom-select组件
 document.querySelectorAll('select').forEach((el) => {
     new TomSelect(el, {});

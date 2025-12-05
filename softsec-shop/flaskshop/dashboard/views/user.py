@@ -1,4 +1,4 @@
-from flask import flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for, jsonify
 from flask_babel import lazy_gettext
 from flask_login import current_user
 from sqlalchemy import or_
@@ -73,6 +73,25 @@ def user_edit(user_id):
 
 
 user_del = wrap_partial(item_del, User)
+
+# Task 3.2 - API endpoint for reporting suspicious activity on particular user
+def user_report(user_id):
+    user = User.get_by_id(user_id)
+    user.update(is_suspicious=True)
+    user.save()
+
+    return jsonify({"code": 0, "message": "User marked suspicious"})
+
+# Task 3.2 - API endpoint for reporting data breach on all users, so that later will be forced to reset password
+def all_user_report():
+    users = User.query.all()
+
+    for user in users:
+        if not user.can_admin():
+            user.update(is_suspicious=True)
+            user.save()
+
+    return jsonify({"code": 0, "message": f"All {len(users)} users marked suspicious"})
 
 
 def address_edit(id):
