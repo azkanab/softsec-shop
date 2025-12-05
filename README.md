@@ -4,17 +4,67 @@
 **[https://www.notion.so/Secure-Software-Application-Project-Team-5-29daaa8c79d7806887c6f590ae937ee3](https://www.notion.so/Secure-Software-Application-Project-Team-5-29daaa8c79d7806887c6f590ae937ee3)**
 
 ---
-
 This guide contains the full setup instructions for running **Softsec-shop**.
 Please **follow the steps in order**.
 
 ---
-
 ## **1. Make the HTTPS Certificate**
 
-Set up a valid HTTPS certificate for local or production use.
+### **1.1 Install the mkcert root CA**
+
+*Download mkcert:*  
+https://github.com/FiloSottile/mkcert/releases  
+
+*Run the file (for Windows):*  
+`mkcert-v1.4.4-windows-amd64.exe`  
+
+*(Optional)* Add it to your PATH.
 
 ---
+
+### **MacOS**  
+*(Required once per machine)*
+
+```bash
+mkcert -install
+```
+---
+### **Windows**
+```bash
+brew install mkcert
+```
+---
+
+### **1.2 Create the certificate folder**
+
+```bash
+mkdir certs
+```
+
+---
+
+### **1.3 Generate HTTPS certificates**
+
+Run inside the project root:
+
+```bash
+mkcert -cert-file certs/server.crt -key-file certs/server.key localhost 127.0.0.1 ::1
+```
+
+This generates:
+
+* `certs/server.crt` – certificate
+* `certs/server.key` – private key
+
+(They are ignored by Git automatically.)
+
+---
+
+### **1.4 Start the application**
+
+```bash
+docker compose up --build
+```
 
 ## **2. Generate PayPal API Key, Secret, and Sandbox Account**
 
@@ -66,7 +116,6 @@ Add the following into your `.env`:
 Username: user-valid
 Password: SandboxPasswort2023!
 ```
-
 ---
 
 ## **5. Rebuild the Docker Container**
@@ -76,8 +125,6 @@ Run this command to load the `.env` file and install any new packages:
 ```bash
 docker compose up -d --build
 ```
-
----
 
 ## **6. Migrate the Database**
 
@@ -134,9 +181,6 @@ cd frontend
 ```bash
 npm run build
 ```
-
----
-
 ## **8. Access the Application**
 
 You can now open Flaskshop at:
@@ -145,6 +189,5 @@ You can now open Flaskshop at:
 https://127.0.0.1
 ```
 
----
 
-If you'd like, I can turn this into a downloadable `.md` file using a file generator — just say **“export as file”**.
+
