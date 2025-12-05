@@ -2,6 +2,8 @@
 """Helper utilities and decorators."""
 
 import logging
+import re
+import random
 from logging.handlers import RotatingFileHandler
 from urllib.parse import urlencode
 
@@ -91,3 +93,58 @@ def jinja_global_varibles(app):
     app.add_template_global(current_app, "current_app")
     app.add_template_global(get_sort_by_url, "get_sort_by_url")
     app.add_template_global(template_hook, "run_hook")
+
+import re
+import random
+
+# A small set of *real* German postcodes
+VALID_GERMAN_POSTCODES = [
+    "10115", "10117", "10119", "10178", "10179",   # Berlin
+    "20095", "20097", "20099",                    # Hamburg
+    "50667", "50668", "50670",                    # Köln
+    "80331", "80333", "80335", "80336",           # München
+    "01067", "01069", "01127",                    # Dresden
+]
+
+
+def extract_postal_code(address: str) -> str | None:
+    """Extracts a postal-code-like fragment from a free-form address string."""
+    if not address:
+        return None
+
+    patterns = [
+        r"\b\d{5}\b",                           # 5 digits (DE style)
+        r"\b[A-Z]\d[A-Z] \d[A-Z]\d\b",          # Canada
+        r"\b[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}\b", # UK
+        r"\b\d{3}-\d{4}\b",                     # Japan
+    ]
+
+    for p in patterns:
+        m = re.search(p, address, flags=re.I)
+        if m:
+            return m.group(0)
+
+    return None
+
+
+def is_german_postal(postal: str | None) -> bool:
+    """Return True if the postal code looks like a German one (5 digits only)."""
+    if not postal:
+        return False
+    return bool(re.fullmatch(r"\d{5}", postal.strip()))
+    
+
+def detect_postal_and_country(address: str):
+    """
+    DHL rule:
+    - If postal code is German -> keep it.
+    - If postal is missing or clearly non-German -> fallback to a real German postal.
+    Always return (postal, 'DE').
+    """
+    postal = extract_postal_code(address)
+
+    if is_german_postal(postal):
+        return postal, "DE"
+
+    fallback_postal = random.choice(VALID_GERMAN_POSTCODES)
+    return fallback_postal, "DE"

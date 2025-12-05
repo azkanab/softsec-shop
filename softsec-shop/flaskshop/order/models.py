@@ -2,6 +2,7 @@ from uuid import uuid4
 
 from flask import url_for
 from flask_login import current_user
+from datetime import datetime, timezone
 
 from flaskshop.account.models import User, UserAddress
 from flaskshop.checkout.models import ShippingMethod
@@ -10,6 +11,8 @@ from flaskshop.constant import (
     OrderStatusKinds,
     PaymentStatusKinds,
     ShipStatusKinds,
+    OrderReturnStatusKinds,
+    RefundStatusKinds
 )
 from flaskshop.database import Column, Model, db
 from flaskshop.discount.models import Voucher
@@ -188,6 +191,14 @@ class Order(Model):
     def payment(self):
         return OrderPayment.query.filter_by(order_id=self.id).first()
 
+    @property
+    def order_return(self):
+        return OrderReturn.query.filter_by(order_id=self.id).first()
+    
+    @property
+    def order_refund(self):
+        return OrderRefund.query.filter_by(order_id=self.id).first()
+
     def pay_success(self, payment):
         self.status = OrderStatusKinds.fulfilled.value
         # to resolve another instance with key is already present in this session
@@ -317,3 +328,45 @@ class OrderEvent(Model):
     order_id = Column(db.Integer())
     user_id = Column(db.Integer())
     type_ = Column("type", db.Integer())
+
+class OrderReturn(Model):
+    __tablename__ = "order_return"
+    order_id = Column(db.Integer(), db.ForeignKey("order_order.id"))
+    status = Column(db.Integer())
+    shipping_label = Column(db.String(100))
+    cancellation_time = Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    arrival_time = Column(db.DateTime)
+    carrier=Column(db.String(100))
+
+    @property
+    def status_human(self):
+        return OrderReturnStatusKinds(int(self.status)).name
+    
+    @property
+    def status_label(self):
+        status =  OrderReturnStatusKinds(int(self.status)).name
+        order = Order.get_by_id(self.order_id)
+        if order.status == "refunded":
+            status = "refunded"
+
+        statusText = {
+            "in_transit": "In Transit",
+            "label_created": "Shipping Label Created",
+            "received": "Has been received",
+            "refunded": "Refunded",
+        }
+        return statusText.get(status, "")
+
+class OrderRefund(Model):
+    __tablename__ = "order_refund"
+    order_id = Column(db.Integer(), db.ForeignKey("order_order.id"))
+    status = Column(db.Integer)
+    total = Column(db.DECIMAL(10, 2))
+    customer_ip_address = Column(db.String(100))
+    payment_method = Column(db.String(255))
+    payment_no = Column(db.String(255), unique=True)
+    refunded_at = Column(db.DateTime())
+
+    @property
+    def status_human(self):
+        return RefundStatusKinds(int(self.status)).name

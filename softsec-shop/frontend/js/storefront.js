@@ -7,6 +7,7 @@ import './components/mycart';
 import './components/sorter';
 // import './components/product-filters';
 import './components/address-form';
+import './components/shipping-label-modal';
 import './components/styleguide';
 import './components/cart';
 import './components/variant-choose';

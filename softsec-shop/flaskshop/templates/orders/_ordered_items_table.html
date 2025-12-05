@@ -139,7 +139,13 @@
             <a href="{{ url_for('order.test_pay_flow', token=order.token) }}" class="btn secondary float-right">
                 {% trans %}Pay for test{% endtrans %}
             </a>
-            <a href="{{ url_for('order.cancel_order', token=order.token) }}" class="btn danger float-right">
+            <a href="{{ url_for('order.cancel_order', token=order.token, is_refund=0) }}" class="btn danger float-right">
+                {% trans %}Cancel Order{% endtrans %}
+            </a>
+        </div>
+        {% elif order.status_human == "fulfilled" %}
+        <div class="col-6 d-flex flex-column align-items-end">
+            <a href="{{ url_for('order.cancel_order', token=order.token, is_refund=1) }}" class="btn danger float-right">
                 {% trans %}Cancel Order{% endtrans %}
             </a>
         </div>
@@ -149,7 +155,54 @@
             <a href="{{ url_for('order.receive', token=order.token) }}" class="btn btn-primary float-right">
                 {% trans %}Confirm receipt{% endtrans %}
             </a>
+            <!-- Task 3.6. Cancel & Return Button -->
+            <a href="#" id="cancelReturnBtn" data-token="{{ order.token }}" class="btn danger float-right">
+                {% trans %}Cancel & Return{% endtrans %}
+            </a>
+        </div>
+        <!-- Task 3.6. Timer and printing shipping label button -->
+        {% elif order.status_human == "canceled" or order.status_human == "returned" %}
+        <div class="col-6">
+            {% if order.order_return %}
+                <div class="d-flex flex-column">
+                    <p class="d-flex justify-content-end mb-1">
+                        <strong>Return Status:&nbsp;</strong>
+                        <span>{{ order.order_return.status_label }}</span>
+                    </p>
+                    <div id="returnTimer" class="d-flex justify-content-end mb-3" style="color: #dc3545; font-weight: bold;" data-cancellation-time="{{ order.order_return.cancellation_time.isoformat() if order.order_return.cancellation_time else '' }}">
+                        Time since cancellation:&nbsp;
+                        <span id="timerDisplay" style="font-weight: normal;">--:--:--</span>
+                    </div>
+                    {% if order.status_human == "canceled" and order.order_return.status_human == "label_created" %}
+                    <div class="d-flex justify-content-end">
+                        <a href="#" id="cancelReturnBtn" data-token="{{ order.token }}" class="btn btn-primary">
+                            {% trans %}Print return shipping label{% endtrans %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endif %}
         </div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Task 3.6 - Loading Spinner -->
+<div id="loadingSpinner" style="display: none;">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Processing your return...</p>
+</div>
+
+<!-- Task 3.6 - Modal to show shipping label after generation -->
+<div id="labelModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Return Shipping Label</h3>
+        <div class="label-container">
+            <img id="labelImage" src="" alt="Shipping Label" />
+        </div>
+        <div class="modal-buttons">
+            <button id="printSendBtn" class="btn btn-primary">Print & Send</button>
+            <button id="closeModalBtn" class="btn secondary">Close</button>
+        </div>
     </div>
 </div>
