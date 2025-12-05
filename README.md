@@ -1,8 +1,3 @@
-Sure! Here is a **clean, combined, ready-to-use `.md` file** based on all the instructions you provided.
-You can copy/paste this directly into a `SETUP.md` or similar file.
-
----
-
 # **Flaskshop Setup Guide**
 
 This guide contains the full setup instructions for running **Flaskshop**.
