@@ -60,3 +60,6 @@ migrations/
 
 # Return shipping label folder (pdf & png)
 flaskshop/static/shipping_label/
+
+# local mkcert certs
+certs/

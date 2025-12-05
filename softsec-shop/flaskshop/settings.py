@@ -27,7 +27,8 @@ class Config:
     ENV = "dev"
     FLASK_DEBUG = get_debug_flag()
     SECRET_KEY = os.getenv("SECRET_KEY", "thisisashop")
-
+    SESSION_COOKIE_SECURE = True
+    PREFERRED_URL_SCHEME = "https"
     # Redis
     # if redis is enabled, it can be used for:
     #   - cache
