@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% from 'bootstrap5/form.html' import render_field %}
+
+{% block title %}
+{% trans %}Review Product{% endtrans %} - {{ product.title }}
+{% endblock %}
+
+{{ bootstrap.load_css() }}
+
+{% block breadcrumb %}
+<ul class="breadcrumbs list-unstyled">
+  <li>
+    <a href="{{ url_for('public.home') }}">
+      Home
+    </a>
+  </li>
+  {% if product.category %}
+  <li>
+    <a href="{{ product.category.get_absolute_url() }}">{{ product.category }}</a>
+  </li>
+  {% endif %}
+  <li>
+    <a href="{{ product.get_absolute_url() }}">{{ product }}</a>
+  </li>
+  <li>
+    <a href="#">{% trans %}Review{% endtrans %}</a>
+  </li>
+</ul>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h2>{% trans %}Review Product{% endtrans %}</h2>
+        </div>
+        <div class="card-body">
+          <!-- Product Info -->
+          <div class="product-info mb-4 d-flex align-items-center">
+            <img src="{{ product.first_img }}" alt="{{ product.title }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover; margin-right: 15px;">
+            <div>
+              <h4>{{ product.title }}</h4>
+              <p class="text-muted mb-0">{% trans %}Order{% endtrans %}: #{{ order.token }}</p>
+            </div>
+          </div>
+
+          <!-- Review Form -->
+          <form method="POST" action="{{ url_for('product.submit_review', product_id=product.id) }}" id="reviewForm">
+            {{ form.csrf_token }}
+            {{ form.order_id }}
+
+            <!-- Packaging Rating -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">{% trans %}Packaging Rating{% endtrans %}</label>
+              <div class="star-rating-input" data-field="packaging_rate">
+                <input type="hidden" name="packaging_rate" id="packaging_rate" value="1" required>
+                <div class="stars-display">
+                  <span class="star-btn" data-value="1">★</span>
+                  <span class="star-btn" data-value="2">★</span>
+                  <span class="star-btn" data-value="3">★</span>
+                  <span class="star-btn" data-value="4">★</span>
+                  <span class="star-btn" data-value="5">★</span>
+                </div>
+                <small class="form-text text-muted">{% trans %}Rate the packaging quality (1-5 stars){% endtrans %}</small>
+              </div>
+            </div>
+
+            <!-- Delivery Rating -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">{% trans %}Delivery Rating{% endtrans %}</label>
+              <div class="star-rating-input" data-field="delivery_rate">
+                <input type="hidden" name="delivery_rate" id="delivery_rate" value="1" required>
+                <div class="stars-display">
+                  <span class="star-btn" data-value="1">★</span>
+                  <span class="star-btn" data-value="2">★</span>
+                  <span class="star-btn" data-value="3">★</span>
+                  <span class="star-btn" data-value="4">★</span>
+                  <span class="star-btn" data-value="5">★</span>
+                </div>
+                <small class="form-text text-muted">{% trans %}Rate the delivery service (1-5 stars){% endtrans %}</small>
+              </div>
+            </div>
+
+            <!-- Item Rating -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">{% trans %}Item Rating{% endtrans %}</label>
+              <div class="star-rating-input" data-field="item_rate">
+                <input type="hidden" name="item_rate" id="item_rate" value="1" required>
+                <div class="stars-display">
+                  <span class="star-btn" data-value="1">★</span>
+                  <span class="star-btn" data-value="2">★</span>
+                  <span class="star-btn" data-value="3">★</span>
+                  <span class="star-btn" data-value="4">★</span>
+                  <span class="star-btn" data-value="5">★</span>
+                </div>
+                <small class="form-text text-muted">{% trans %}Rate the item quality (1-5 stars){% endtrans %}</small>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary btn-lg">
+                {% trans %}Submit Review{% endtrans %}
+              </button>
+              <a href="{{ product.get_absolute_url() }}" class="btn btn-secondary">
+                {% trans %}Cancel{% endtrans %}
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .star-rating-input {
+    margin-bottom: 10px;
+  }
+
+  .stars-display {
+    font-size: 32px;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  .star-btn {
+    color: #ddd !important;
+    transition: color 0.2s;
+    cursor: pointer;
+    user-select: none;
+    display: inline-block;
+    margin: 0 2px;
+  }
+
+  .star-btn.active {
+    color: #3ee7cd !important;
+  }
+
+  .star-btn:hover {
+    color: #3ee7cd !important;
+  }
+
+  .product-info img {
+    border: 1px solid #ddd;
+  }
+
+  .card {
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+
+    // Helper function to update star display
+    function updateStars(starsArray, value) {
+      for (let i = 0; i < starsArray.length; i++) {
+        const star = starsArray[i];
+        // Remove both classes first to ensure clean state
+        star.classList.remove('active');
+
+        // Add active class if this star should be filled
+        if (i < value) {
+          star.classList.add('active');
+        }
+      }
+    }
+
+    // Initialize star rating inputs
+    const ratingDivs = document.querySelectorAll('.star-rating-input');
+
+    ratingDivs.forEach(function(ratingDiv) {
+      const fieldName = ratingDiv.getAttribute('data-field');
+      const hiddenInput = document.getElementById(fieldName);
+      const starsNodeList = ratingDiv.querySelectorAll('.star-btn');
+      const stars = Array.from(starsNodeList); // Convert to array for better handling
+
+      if (!hiddenInput) {
+        console.error('Hidden input not found for:', fieldName);
+        return;
+      }
+
+      // Set initial state (default value is 1)
+      const initialValue = parseInt(hiddenInput.value) || 1;
+      updateStars(stars, initialValue);
+
+      // Add click handlers to each star
+      stars.forEach(function(star, index) {
+        star.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          const value = parseInt(this.getAttribute('data-value'));
+          hiddenInput.value = value;
+          updateStars(stars, value);
+        });
+
+        // Add hover effect
+        star.addEventListener('mouseenter', function() {
+          const value = parseInt(this.getAttribute('data-value'));
+          updateStars(stars, value);
+        });
+      });
+
+      // Restore selected value on mouse leave from the container
+      const starsDisplay = ratingDiv.querySelector('.stars-display');
+      if (starsDisplay) {
+        starsDisplay.addEventListener('mouseleave', function() {
+          const currentValue = parseInt(hiddenInput.value) || 1;
+          updateStars(stars, currentValue);
+        });
+      }
+    });
+
+    // Form validation
+    const reviewForm = document.getElementById('reviewForm');
+    if (reviewForm) {
+      reviewForm.addEventListener('submit', function(e) {
+        const packagingRate = parseInt(document.getElementById('packaging_rate').value);
+        const deliveryRate = parseInt(document.getElementById('delivery_rate').value);
+        const itemRate = parseInt(document.getElementById('item_rate').value);
+
+        if (packagingRate < 1 || packagingRate > 5 ||
+            deliveryRate < 1 || deliveryRate > 5 ||
+            itemRate < 1 || itemRate > 5) {
+          e.preventDefault();
+          alert('{% trans %}Please provide valid ratings (1-5 stars) for all categories.{% endtrans %}');
+          return false;
+        }
+      });
+    }
+  });
+</script>
+
+{% endblock content %}

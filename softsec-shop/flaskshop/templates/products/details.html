@@ -134,20 +134,244 @@
       {% trans %}This product is currently{% endtrans %} <strong>{% trans %}unavailable{% endtrans %}</strong>.
     </p>
     {% endif %}
-    <div class="product__info__description">
-      <h3>{% trans %}Description{% endtrans %}</h3>
-      <hr>
-      {{ product.description|safe }}
+
+    <!-- Tabs for Description and Reviews -->
+    <div class="product__tabs mt-4">
+      <ul class="nav nav-tabs" id="productTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description"
+                  type="button" role="tab" aria-controls="description" aria-selected="true">
+            {% trans %}Description{% endtrans %}
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews"
+                  type="button" role="tab" aria-controls="reviews" aria-selected="false">
+            {% trans %}Reviews{% endtrans %} ({{ product.review_count }})
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="productTabsContent">
+        <!-- Description Tab -->
+        <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+          <div class="product__info__description p-3">
+            {{ product.description|safe }}
+            <hr>
+            <table>
+              {% for attribute, value in product.attribute_map.items() %}
+              <tr>
+                <td>{{ attribute }}:</td>
+                <td><strong>{{ value }}</strong></td>
+              </tr>
+              {% endfor %}
+            </table>
+          </div>
+        </div>
+
+        <!-- Reviews Tab -->
+        <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+          <div class="product__reviews p-3">
+            <div class="reviews-header mb-3">
+              <h4>{% trans %}Customer Reviews{% endtrans %}</h4>
+              <p class="text-muted">
+                {% trans %}Average Rating:{% endtrans %}
+                <strong id="average-rating-display">{{ product.rating }}</strong> / 5.0
+                (<span id="review-count-display">{{ product.review_count }}</span> {% trans %}reviews{% endtrans %})
+              </p>
+            </div>
+
+            <div id="reviews-container" class="reviews-list" style="max-height: 500px; overflow-y: auto;">
+              <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="reviews-pagination" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <hr>
-    <table>
-      {% for attribute, value in product.attribute_map.items() %}
-      <tr>
-        <td>{{ attribute }}:</td>
-        <td><strong>{{ value }}</strong></td>
-      </tr>
-      {% endfor %}
-    </table>
   </div>
 </div>
+
+<script>
+  // Load reviews on page load to update counts
+  document.addEventListener('DOMContentLoaded', function() {
+    // Load reviews immediately to get accurate counts
+    loadReviews(1);
+  });
+
+  // Also load reviews when tab is clicked
+  document.getElementById('reviews-tab').addEventListener('click', function() {
+    loadReviews(1);
+  });
+
+  function loadReviews(page = 1) {
+    const container = document.getElementById('reviews-container');
+    const pagination = document.getElementById('reviews-pagination');
+
+    fetch('/products/api/reviews/{{ product.id }}?page=' + page)
+      .then(response => response.json())
+      .then(data => {
+        // Update review count
+        if (data.total !== undefined) {
+          document.getElementById('review-count-display').textContent = data.total;
+
+          // Update reviews count in tab title
+          const reviewsTab = document.getElementById('reviews-tab');
+          if (reviewsTab) {
+            reviewsTab.innerHTML = '{% trans %}Reviews{% endtrans %} (' + data.total + ')';
+          }
+        }
+
+        // Update average rating from API (accurate across all reviews)
+        if (data.overall_rating !== undefined) {
+          document.getElementById('average-rating-display').textContent = data.overall_rating.toFixed(1);
+        }
+
+        if (data.reviews.length === 0) {
+          container.innerHTML = '<p class="text-muted text-center">{% trans %}No reviews yet. Be the first to review this product!{% endtrans %}</p>';
+          pagination.innerHTML = '';
+          if (data.total === 0) {
+            document.getElementById('average-rating-display').textContent = '0.0';
+          }
+          return;
+        }
+
+        let reviewsHtml = '';
+        data.reviews.forEach(review => {
+          reviewsHtml += `
+            <div class="review-item border-bottom pb-3 mb-3">
+              <div class="review-header d-flex justify-content-between">
+                <strong>${escapeHtml(review.author)}</strong>
+                <small class="text-muted">${review.date}</small>
+              </div>
+              <div class="review-ratings mt-2">
+                <div class="rating-row">
+                  <span class="rating-label">{% trans %}Packaging:{% endtrans %}</span>
+                  ${generateStars(review.packaging_rate)}
+                </div>
+                <div class="rating-row">
+                  <span class="rating-label">{% trans %}Delivery:{% endtrans %}</span>
+                  ${generateStars(review.delivery_rate)}
+                </div>
+                <div class="rating-row">
+                  <span class="rating-label">{% trans %}Item:{% endtrans %}</span>
+                  ${generateStars(review.item_rate)}
+                </div>
+                <div class="rating-row mt-2">
+                  <strong>{% trans %}Average:{% endtrans %} ${review.average_rating}/5</strong>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = reviewsHtml;
+
+        // Pagination
+        if (data.pages > 1) {
+          let paginationHtml = '<nav><ul class="pagination justify-content-center">';
+
+          if (data.has_prev) {
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="loadReviews(${data.page - 1}); return false;">Previous</a></li>`;
+          }
+
+          for (let i = 1; i <= data.pages; i++) {
+            paginationHtml += `<li class="page-item ${i === data.page ? 'active' : ''}"><a class="page-link" href="#" onclick="loadReviews(${i}); return false;">${i}</a></li>`;
+          }
+
+          if (data.has_next) {
+            paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="loadReviews(${data.page + 1}); return false;">Next</a></li>`;
+          }
+
+          paginationHtml += '</ul></nav>';
+          pagination.innerHTML = paginationHtml;
+        } else {
+          pagination.innerHTML = '';
+        }
+      })
+      .catch(error => {
+        container.innerHTML = '<p class="text-danger">{% trans %}Error loading reviews. Please try again.{% endtrans %}</p>';
+        console.error('Error loading reviews:', error);
+      });
+  }
+
+  function generateStars(rating) {
+    let stars = '';
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars += '<span class="star filled">★</span>';
+      } else {
+        stars += '<span class="star">☆</span>';
+      }
+    }
+    return stars;
+  }
+
+  function escapeHtml(text) {
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+  }
+</script>
+
+<style>
+  /* Tab Styling */
+  .product__tabs .nav-tabs {
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .product__tabs .nav-tabs .nav-link {
+    color: #000 !important;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .product__tabs .nav-tabs .nav-link:hover {
+    border-bottom-color: #3ee7cd;
+    background-color: transparent;
+  }
+
+  .product__tabs .nav-tabs .nav-link.active {
+    color: #3ee7cd !important;
+    border-bottom: 3px solid #3ee7cd !important;
+    background-color: transparent;
+  }
+
+  /* Star Rating in Reviews */
+  .star {
+    font-size: 18px;
+    margin-right: 2px;
+  }
+  .star.filled {
+    color: #3ee7cd;
+  }
+  .star:not(.filled) {
+    color: #ddd;
+  }
+  .rating-row {
+    margin-bottom: 5px;
+  }
+  .rating-label {
+    display: inline-block;
+    min-width: 100px;
+    font-weight: 500;
+  }
+  .review-item:last-child {
+    border-bottom: none !important;
+  }
+</style>
+
 {% endblock content %}
