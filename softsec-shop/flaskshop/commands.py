@@ -36,7 +36,9 @@ TEST_PATH = "tests"
 @click.command()
 def test():
     """Run the tests."""
-    print(call(f"pytest {TEST_PATH}", shell=True))
+    # Task 4.2. - Fix 5
+    exit_code = call(["pytest", str(TEST_PATH)])
+    print(exit_code)
 
 
 @click.command()
