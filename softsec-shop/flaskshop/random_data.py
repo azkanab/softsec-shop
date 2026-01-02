@@ -294,7 +294,8 @@ def create_product(**kwargs):
 def set_product_attributes(product, product_type):
     attr_dict = {}
     for product_attribute in product_type.product_attributes:
-        value = random.choice(product_attribute.values)
+        #task 4.2 -FIX 15
+        value = secrets.choice(product_attribute.values)
         attr_dict[str(product_attribute.id)] = str(value.id)
 
     product.attributes = attr_dict
