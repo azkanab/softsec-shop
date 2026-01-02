@@ -516,7 +516,10 @@ def create_fake_order(discounts):
     )
 
     order = Order.create(**order_data)
-    lines = create_order_lines(order, discounts, random.randrange(1, 5))
+    number_of_lines = secrets.randbelow(4) + 1
+    #lines = create_order_lines(order, discounts, random.randrange(1, 5))
+    #task 4.2 -FIX 22
+    lines = create_order_lines(order, discounts, number_of_lines)
     order.total_net = sum([line.get_total() for line in lines])
     order.save()
     create_payment(order)
