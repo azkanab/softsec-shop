@@ -1,6 +1,7 @@
 import functools
 import inspect
-from pickle import UnpicklingError
+# Task 4.2. - Fix 7
+from pickle import UnpicklingError # nosec B403
 
 from flask import current_app
 from sqlalchemy.ext.serializer import dumps, loads
