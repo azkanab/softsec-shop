@@ -1,4 +1,5 @@
-import random
+# import random
+import secrets
 import string
 from datetime import datetime
 from decimal import Decimal
@@ -56,7 +57,8 @@ class Voucher(Model):
     def generate_code(cls):
         # task 1.4 Logical check to ensure code is unique before returning
         while True:
-            code = "".join(random.choices(string.ascii_uppercase, k=16))
+            # Task 4.2. - Fix 9
+            code = "".join(secrets.choice(string.ascii_uppercase, k=16))
             exist = cls.query.filter_by(code=code).first()
             if not exist:
                 return code
