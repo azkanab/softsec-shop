@@ -499,7 +499,8 @@ def create_orders(how_many=10):
 def create_fake_order(discounts):
     user = User.query.order_by(func.random()).first()
     address = create_fake_address()
-    status = random.choice(list(OrderStatusKinds)).value
+    #task 4.2 -FIX 21
+    status = secrets.choice(list(OrderStatusKinds)).value
     order_data = {
         "user_id": user.id,
         "shipping_address": address.full_address,
