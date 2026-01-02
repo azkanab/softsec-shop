@@ -61,8 +61,24 @@ def lint(fix_imports):
         arg.name for arg in chain(root_files, root_directories) if arg.name not in skip
     ]
 
+    # Task 4.2.: Fix 6
+
+    ALLOWED_TOOLS = {
+        "isort",
+        "flake8",
+        "pytest",
+    }
+
+
     def execute_tool(description, *args):
         """Execute a checking tool with its arguments."""
+        if not args:
+            raise click.ClickException("No command provided")
+
+        tool = args[0]
+        if tool not in ALLOWED_TOOLS:
+            raise click.ClickException(f"Tool not allowed: {tool}")
+        
         command_line = list(args) + files_and_directories
         click.echo(f"{description}: {' '.join(command_line)}")
         rv = call(command_line)
