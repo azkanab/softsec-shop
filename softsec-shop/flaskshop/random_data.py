@@ -533,7 +533,9 @@ def create_order_lines(order, discounts, how_many=10):
 def create_order_line(order, discounts):
     product = Product.query.order_by(func.random()).first()
     variant = product.variant[0]
-    quantity = random.randrange(1, 5)
+    #quantity = random.randrange(1, 5)
+    #task 4.2 Fix 23
+    quantity = secrets.randbelow(4) + 1
     variant.quantity += quantity
     variant.save()
     return OrderLine.create(
