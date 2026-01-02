@@ -284,7 +284,8 @@ def create_product(**kwargs):
         "title": fake.company(),
         "basic_price": fake.pydecimal(2, 2, positive=True),
         "description": "\n\n".join(description),
-        "is_featured": random.choice([0, 1]),
+        #task 4.2 -FIX 14
+        "is_featured": secrets.choice([0, 1]),
     }
     defaults.update(kwargs)
     return Product.create(**defaults)
