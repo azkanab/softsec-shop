@@ -2,6 +2,7 @@ import binascii
 import os
 import random
 import struct
+import secrets
 import threading
 import time
 import urllib
@@ -25,7 +26,8 @@ class cached_hybrid_property(hybrid_property):
 
 
 class ObjectId:
-    _inc = random.randint(0, 0xFFFFFF)
+    # Task 4.2. - Fix 8
+    _inc = secrets.randbelow(0x1000000)
     _inc_lock = threading.Lock()
 
 
