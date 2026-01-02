@@ -4,6 +4,7 @@ import smtplib
 import string
 import hashlib
 import requests
+import secrets
 from email.message import EmailMessage
 from functools import wraps
 
@@ -172,9 +173,10 @@ def permission_required(permission):
 def admin_required(f):
     return permission_required(Permission.ADMINISTER)(f)
 
-
+# Task 4.2. - Fix 3
 def gen_tmp_pwd(size=8, chars=string.ascii_uppercase + string.digits):
-    return "".join(random.choice(chars) for _ in range(size))
+    # return "".join(random.choice(chars) for _ in range(size))
+    return "".join(secrets.choice(chars) for _ in range(size))
 
 
 def create_email_server():
