@@ -44,7 +44,11 @@ class SaleorProvider(BaseProvider):
         return fake.pydecimal(2, 2, positive=True)
 
     def shipping_method(self):
+        #task 4.2 -FIX 12
         return random.choice(ShippingMethod.query.all())
+    
+    #    return random.choice(ShippingMethod.query.all())
+    
 
 
 fake.add_provider(SaleorProvider)
