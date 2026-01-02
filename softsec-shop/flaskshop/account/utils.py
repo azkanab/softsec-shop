@@ -107,7 +107,10 @@ class PhoneNumber(phonenumbers.PhoneNumber):
 
 # Task 3.2 - Helper to check if input password is breach using pwned API
 def isPasswordBreached(password):
-    encrypted_pwd = hashlib.sha1(password.encode("utf-8")).hexdigest().upper()
+    encrypted_pwd = hashlib.sha1(
+        password.encode("utf-8"),
+        usedforsecurity=False
+    ).hexdigest().upper()
     encrypted_prefix = encrypted_pwd[:5]
     encrypted_suffix = encrypted_pwd[5:]
     response = requests.get(f'https://api.pwnedpasswords.com/range/{encrypted_prefix}')
