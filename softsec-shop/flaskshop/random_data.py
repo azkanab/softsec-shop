@@ -355,10 +355,13 @@ def create_users(how_many=10):
 # step14
 def create_fake_user():
     email = get_email(fake.first_name(), fake.last_name())
+    #task 4.2 -FIX 17
+    password = os.getenv("USER_PASSWORD")
     user, _ = User.get_or_create(
         username=fake.first_name() + fake.last_name(),
         email=email,
-        password="password",
+        #password="password",
+        password=password,
         is_active=True,
     )
     return user
