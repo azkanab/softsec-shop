@@ -149,5 +149,6 @@ def detect_postal_and_country(address: str):
         return postal, "DE"
 
     #fallback_postal = random.choice(VALID_GERMAN_POSTCODES)
+    #Task 4.2-Fix 26
     fallback_postal = secrets.choice(VALID_GERMAN_POSTCODES)
     return fallback_postal, "DE"

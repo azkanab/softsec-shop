@@ -1,4 +1,5 @@
-import random
+#import random
+import secrets
 import itertools
 import unicodedata
 from uuid import uuid4
@@ -577,7 +578,9 @@ def create_fake_sale():
     sale = Sale.create(
         title=f"Happy {fake.word()} day!",
         discount_value_type=DiscountValueTypeKinds.percent.value,
-        discount_value=random.choice([10, 20, 30, 40, 50]),
+        #Task 4.2 -FIX 25
+        #discount_value=random.choice([10, 20, 30, 40, 50]),
+        discount_value=secrets.choice([10, 20, 30, 40, 50]),
     )
     for product in Product.query.order_by(func.random()).all()[:4]:
         SaleProduct.create(sale_id=sale.id, product_id=product.id)
