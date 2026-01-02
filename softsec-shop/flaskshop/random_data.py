@@ -550,7 +550,8 @@ def create_order_line(order, discounts):
 
 # step27
 def create_payment(order):
-    status = random.choice(list(PaymentStatusKinds)).value
+    #Task 4.2 -FIX 24
+    status = secrets.choice(list(PaymentStatusKinds)).value
     payment = OrderPayment.create(
         order_id=order.id,
         status=status,
