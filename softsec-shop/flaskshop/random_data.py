@@ -45,7 +45,7 @@ class SaleorProvider(BaseProvider):
 
     def shipping_method(self):
         #task 4.2 -FIX 12
-        return random.choice(ShippingMethod.query.all())
+        return secrets.choice(ShippingMethod.query.all())
     
     #    return random.choice(ShippingMethod.query.all())
     
