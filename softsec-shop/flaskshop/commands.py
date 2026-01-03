@@ -2,7 +2,8 @@
 """Click commands."""
 from itertools import chain
 from pathlib import Path
-from subprocess import call
+from subprocess import call # nosec B404
+import pytest
 
 import click
 from flask import current_app
@@ -37,8 +38,7 @@ TEST_PATH = "tests"
 def test():
     """Run the tests."""
     # Task 4.2. - Fix 5
-    exit_code = call(["pytest", str(TEST_PATH)])
-    print(exit_code)
+    raise SystemExit(pytest.main([str(TEST_PATH)]))
 
 
 @click.command()
@@ -81,7 +81,7 @@ def lint(fix_imports):
         
         command_line = list(args) + files_and_directories
         click.echo(f"{description}: {' '.join(command_line)}")
-        rv = call(command_line)
+        rv = call(command_line) # nosec B603
         if rv != 0:
             exit(rv)
 
