@@ -1,6 +1,8 @@
 services:
   db:
      image: mysql:8.0
+     ports:
+      - "3306:3306"
      command:
       - --default_authentication_plugin=mysql_native_password
       - --character-set-server=utf8mb4
@@ -34,9 +36,10 @@ services:
       - webnet
 
   web:
-    volumes:
-      - .:/home/appuser/app
-    build: .
+    build: 
+      context: .
+      args:
+        - HOST_UID=1000
     depends_on:
       - db
       - redis
