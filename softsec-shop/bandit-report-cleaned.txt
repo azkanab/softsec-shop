@@ -1,0 +1,22 @@
+Run started:2026-01-04 18:19:56.365379+00:00
+
+Test results:
+
+--------------------------------------------------
+Code scanned:
+	Total lines of code: 266457
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 24
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
