@@ -160,6 +160,26 @@
                 {% trans %}Cancel & Return{% endtrans %}
             </a>
         </div>
+        <!-- Review Product button for completed orders -->
+        {% elif order.status_human == "completed" %}
+        <div class="col-6">
+            {% for line in order.lines %}
+                {% set already_reviewed = namespace(value=false) %}
+                {% for review in line.variant.product.reviews %}
+                    {% if review.user_id == current_user.id and review.order_id == order.id and review.product_id == line.product_id %}
+                        {% set already_reviewed.value = true %}
+                    {% endif %}
+                {% endfor %}
+                {% if not already_reviewed.value %}
+                <div class="mb-2">
+                    <a href="{{ url_for('product.show_review_form', product_id=line.product_id, order_token=order.token) }}"
+                       class="btn btn-primary float-right">
+                        {% trans %}Review{% endtrans %} {{ line.product_name }}
+                    </a>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
         <!-- Task 3.6. Timer and printing shipping label button -->
         {% elif order.status_human == "canceled" or order.status_human == "returned" %}
         <div class="col-6">

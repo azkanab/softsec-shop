@@ -1,4 +1,5 @@
 import itertools
+from datetime import datetime
 
 from flask import current_app, request, url_for
 from sqlalchemy import cast, Integer
@@ -18,6 +19,7 @@ MC_KEY_ATTRIBUTE_VALUES = "product:attribute:values:{}"
 MC_KEY_COLLECTION_PRODUCTS = "product:collection:{}:products:{}"
 MC_KEY_CATEGORY_PRODUCTS = "product:category:{}:products:{}"
 MC_KEY_CATEGORY_CHILDREN = "product:category:{}:children"
+MC_KEY_PRODUCT_REVIEWS = "product:reviews:{}:{}"
 
 
 class Product(Model):
@@ -107,6 +109,12 @@ class Product(Model):
             for k, v in self.attributes.items()
         }
         return items
+
+    @property
+    def reviews(self):
+        """Get all reviews for this product."""
+        # ProductReview is defined later in this file
+        return ProductReview.query.filter_by(product_id=self.id).all()
 
     @classmethod
     @cache(MC_KEY_FEATURED_PRODUCTS.format("{num}"))
@@ -672,6 +680,140 @@ class ProductCollection(Model):
         super().__flush_delete_event__(target)
         target.clear_mc(target)
 
+
+class ProductReview(Model):
+    """Product review with ratings for packaging, delivery, and item quality."""
+
+    __tablename__ = "product_review"
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'product_id', 'order_id', name='unique_user_product_order_review'),
+    )
+
+    product_id = Column(db.Integer(), nullable=False)
+    user_id = Column(db.Integer(), nullable=False)
+    order_id = Column(db.Integer(), nullable=False)
+    packaging_rate = Column(db.Integer(), nullable=False, default=1)
+    delivery_rate = Column(db.Integer(), nullable=False, default=1)
+    item_rate = Column(db.Integer(), nullable=False, default=1)
+    date_of_submission = Column(db.DateTime(), nullable=False, default=datetime.utcnow)
+
+    def __str__(self):
+        return f"Review by User {self.user_id} for Product {self.product_id}"
+
+    @property
+    def product(self):
+        return Product.get_by_id(self.product_id)
+
+    @property
+    def user(self):
+        from flaskshop.account.models import User
+        return User.get_by_id(self.user_id)
+
+    @property
+    def order(self):
+        from flaskshop.order.models import Order
+        return Order.get_by_id(self.order_id)
+
+    @property
+    def average_rating(self):
+        """Calculate average rating across all three categories."""
+        return round((self.packaging_rate + self.delivery_rate + self.item_rate) / 3, 1)
+
+    @property
+    def author_display_name(self):
+        """Get display name for the author, preferring nick_name over username."""
+        if self.user:
+            return self.user.nick_name if self.user.nick_name else self.user.username
+        return "Anonymous"
+
+    @classmethod
+    def get_reviews_by_product(cls, product_id, page=1, per_page=10):
+        """Get paginated reviews for a specific product."""
+        return cls.query.filter_by(product_id=product_id).order_by(desc(cls.date_of_submission)).paginate(page=page, per_page=per_page, error_out=False)
+
+    @classmethod
+    def user_has_reviewed_product_in_order(cls, user_id, product_id, order_id):
+        """Check if a user has already reviewed a specific product in a specific order."""
+        return cls.query.filter_by(
+            user_id=user_id,
+            product_id=product_id,
+            order_id=order_id
+        ).first() is not None
+
+    @classmethod
+    def can_user_review_product_in_order(cls, user_id, product_id, order_id):
+        """
+        Check if a user can review a product from a specific order.
+        User must have a completed order containing the product and not have reviewed it yet for that order.
+        """
+        from flaskshop.order.models import Order, OrderLine
+        from flaskshop.constant import OrderStatusKinds
+
+        # Check if user already reviewed this product for this specific order
+        if cls.user_has_reviewed_product_in_order(user_id, product_id, order_id):
+            return False, "You have already reviewed this product for this order"
+
+        # Check if order exists and belongs to user
+        order = Order.get_by_id(order_id)
+        if not order or order.user_id != user_id:
+            return False, "Invalid order"
+
+        # Check if order is completed
+        if order.status != OrderStatusKinds.completed.value:
+            return False, "You can only review products from completed orders"
+
+        # Check if product is in the order
+        order_lines = OrderLine.query.filter_by(order_id=order.id).all()
+        product_in_order = any(line.product_id == product_id for line in order_lines)
+
+        if not product_in_order:
+            return False, "This product is not in the specified order"
+
+        return True, "Can review"
+
+    @staticmethod
+    def clear_mc(target):
+        """Clear review cache for the product."""
+        keys = rdb.keys(MC_KEY_PRODUCT_REVIEWS.format(target.product_id, "*"))
+        for key in keys:
+            rdb.delete(key)
+
+    @classmethod
+    def update_product_rating(cls, product_id):
+        """Update product rating and review count. Call this after creating/deleting reviews."""
+        from sqlalchemy import func, cast, Float
+
+        # Calculate average rating across all reviews for this product
+        # Cast to Float to ensure proper decimal division
+        avg_expr = cast((cls.packaging_rate + cls.delivery_rate + cls.item_rate), Float) / 3.0
+
+        result = db.session.query(
+            func.count(cls.id).label('count'),
+            func.avg(avg_expr).label('avg_rating')
+        ).filter_by(product_id=product_id).first()
+
+        product = Product.query.get(product_id)
+        if product:
+            if result.count > 0 and result.avg_rating is not None:
+                product.rating = round(float(result.avg_rating), 2)
+                product.review_count = result.count
+            else:
+                product.rating = 5.0
+                product.review_count = 0
+            db.session.add(product)
+
+            # Clear product cache
+            rdb.delete(MC_KEY_PRODUCT_DISCOUNT_PRICE.format(product_id))
+
+    @classmethod
+    def __flush_insert_event__(cls, target):
+        super().__flush_insert_event__(target)
+        target.clear_mc(target)
+
+    @classmethod
+    def __flush_delete_event__(cls, target):
+        super().__flush_delete_event__(target)
+        target.clear_mc(target)
 
 
 def handle_attribute_filter(query, attribute_title, selected_values):
