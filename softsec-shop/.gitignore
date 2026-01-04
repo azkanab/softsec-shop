@@ -63,3 +63,6 @@ flaskshop/static/shipping_label/
 
 # local mkcert certs
 certs/
+
+#ignore bandit env
+bandit-env/

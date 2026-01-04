@@ -57,6 +57,7 @@ def get_dhl_return_shipping_label(order):
         headers=headers,
         data=payload_json,
         auth=(DHL_USERNAME, DHL_PASSWORD),
+        timeout=(3, 10), # Task 4.2. - Fix 10
     )
     response.raise_for_status()
     

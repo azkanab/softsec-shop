@@ -26,20 +26,20 @@ class TestCRUDMixin:
     def test_create(self):
         """Test CRUD create."""
         user = ExampleUserModel.create(username="foo", email="foo@bar.com")
-        assert ExampleUserModel.get_by_id(user.id).username == "foo"
+        assert ExampleUserModel.get_by_id(user.id).username == "foo"  # nosec B101
 
     def test_create_save(self):
         """Test CRUD create with save."""
         user = ExampleUserModel("foo", "foo@bar.com")
         user.save()
-        assert ExampleUserModel.get_by_id(user.id) is not None
+        assert ExampleUserModel.get_by_id(user.id) is not None  # nosec B101
 
     def test_delete_with_commit(self):
         """Test CRUD delete with commit."""
         user = ExampleUserModel("foo", "foo@bar.com")
         user.save()
         user.delete(commit=True)
-        assert ExampleUserModel.get_by_id(user.id) is None
+        assert ExampleUserModel.get_by_id(user.id) is None  # nosec B101
 
     def test_delete_without_commit_cannot_access(self):
         """Test CRUD delete without commit."""
@@ -56,7 +56,7 @@ class TestCRUDMixin:
         user.save()
         user.update(commit=commit, username="bar")
         retrieved = db.session.execute(text("""select * from testusers""")).fetchone()
-        assert retrieved.username == expected
+        assert retrieved.username == expected  # nosec B101
 
 
 @pytest.mark.usefixtures("db")
@@ -65,4 +65,4 @@ class TestPkModel:
 
     def test_get_by_id_wrong_type(self):
         """Test get_by_id returns None for non-numeric argument."""
-        assert ExampleUserModel.get_by_id("xyz") is None
+        assert ExampleUserModel.get_by_id("xyz") is None  # nosec B101

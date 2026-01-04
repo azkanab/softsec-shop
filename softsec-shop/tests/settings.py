@@ -1,10 +1,12 @@
+import os
+
 """Settings module for test app."""
 ENV = "development"
 TESTING = True
 SQLALCHEMY_DATABASE_URI = (
     "mysql+pymysql://root:root@127.0.0.1:3306/testshop?charset=utf8mb4"
 )
-SECRET_KEY = "not-so-secret-in-tests"
+SECRET_KEY = os.getenv("TEST_SECRET_KEY")
 BCRYPT_LOG_ROUNDS = (
     4  # For faster tests; needs at least 4 to avoid "ValueError: Invalid rounds"
 )

@@ -3,9 +3,11 @@
 
 import logging
 import re
-import random
+#import random
+import secrets
 from logging.handlers import RotatingFileHandler
 from urllib.parse import urlencode
+
 
 from flask import current_app, flash, request
 from flask_sqlalchemy.record_queries import get_recorded_queries
@@ -146,5 +148,7 @@ def detect_postal_and_country(address: str):
     if is_german_postal(postal):
         return postal, "DE"
 
-    fallback_postal = random.choice(VALID_GERMAN_POSTCODES)
+    #fallback_postal = random.choice(VALID_GERMAN_POSTCODES)
+    #Task 4.2-Fix 26
+    fallback_postal = secrets.choice(VALID_GERMAN_POSTCODES)
     return fallback_postal, "DE"

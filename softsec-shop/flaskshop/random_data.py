@@ -1,4 +1,6 @@
 import random
+import secrets
+import os
 import itertools
 import unicodedata
 from uuid import uuid4
@@ -42,7 +44,11 @@ class SaleorProvider(BaseProvider):
         return fake.pydecimal(2, 2, positive=True)
 
     def shipping_method(self):
-        return random.choice(ShippingMethod.query.all())
+        #task 4.2 -FIX 12
+        return secrets.choice(ShippingMethod.query.all())
+    
+    #    return random.choice(ShippingMethod.query.all())
+    
 
 
 fake.add_provider(SaleorProvider)
@@ -238,7 +244,10 @@ def create_products_by_type(
         set_product_attributes(product, product_type)
         if create_images:
             type_placeholders = placeholder_dir / schema["images_dir"]
-            create_product_images(product, random.randrange(1, 5), type_placeholders)
+            image_count = secrets.randbelow(4) + 1
+            #create_product_images(product, random.randrange(1, 5), type_placeholders)
+            # TASK 4.2 -FIX 13
+            create_product_images(product, image_count, type_placeholders)
         variant_combinations = schema["variant_titles"]
 
         prices = get_price_override(schema, len(variant_combinations), product.price)
@@ -282,7 +291,8 @@ def create_product(**kwargs):
         "title": fake.company(),
         "basic_price": fake.pydecimal(2, 2, positive=True),
         "description": "\n\n".join(description),
-        "is_featured": random.choice([0, 1]),
+        #task 4.2 -FIX 14
+        "is_featured": secrets.choice([0, 1]),
     }
     defaults.update(kwargs)
     return Product.create(**defaults)
@@ -292,7 +302,8 @@ def create_product(**kwargs):
 def set_product_attributes(product, product_type):
     attr_dict = {}
     for product_attribute in product_type.product_attributes:
-        value = random.choice(product_attribute.values)
+        #task 4.2 -FIX 15
+        value = secrets.choice(product_attribute.values)
         attr_dict[str(product_attribute.id)] = str(value.id)
 
     product.attributes = attr_dict
@@ -303,7 +314,8 @@ def set_product_attributes(product, product_type):
 def create_product_images(product, how_many, placeholder_dir):
     placeholder_root = Config.STATIC_DIR / placeholder_dir
     for dummy in range(how_many):
-        image_name = random.choice(list(placeholder_root.iterdir()))
+        #task 4.2 -FIX 16
+        image_name = secrets.choice(list(placeholder_root.iterdir()))
         image = image_name.relative_to(Config.STATIC_DIR).as_posix()
         ProductImage.get_or_create(image=image, product_id=product.id)
 
@@ -353,10 +365,13 @@ def create_users(how_many=10):
 # step14
 def create_fake_user():
     email = get_email(fake.first_name(), fake.last_name())
+    #task 4.2 -FIX 17
+    password = os.getenv("USER_PASSWORD")
     user, _ = User.get_or_create(
         username=fake.first_name() + fake.last_name(),
         email=email,
-        password="password",
+        #password="password",
+        password=password,
         is_active=True,
     )
     return user
@@ -384,23 +399,62 @@ def create_roles():
 
 
 # step17
+# def create_admin():
+#     user = User.create(
+#         username="admin", email="admin@163.com", password="admin", is_active=True
+#     )
+#     create_fake_address(user.id)
+#     create_fake_address(user.id)
+#     create_fake_address(user.id)
+#     UserRole.create(user_id=user.id, role_id=4)
+#     yield f"Admin {user.username} created"
+#     user = User.create(username="op", email="op@163.com", password="op", is_active=True)
+#     UserRole.create(user_id=user.id, role_id=3)
+#     yield f"Admin {user.username} created"
+#     user = User.create(
+#         username="editor", email="editor@163.com", password="editor", is_active=True
+#     )
+#     UserRole.create(user_id=user.id, role_id=2)
+#     yield f"Admin {user.username} created"
+   
 def create_admin():
+    ###TASK 4.2 -FIX 20,19,18
+    # Admin user
+    admin_password = os.getenv("ADMIN_PASSWORD")
     user = User.create(
-        username="admin", email="admin@163.com", password="admin", is_active=True
+        username="admin",
+        email="admin@163.com",
+        password=admin_password,
+        is_active=True,
     )
     create_fake_address(user.id)
     create_fake_address(user.id)
     create_fake_address(user.id)
     UserRole.create(user_id=user.id, role_id=4)
     yield f"Admin {user.username} created"
-    user = User.create(username="op", email="op@163.com", password="op", is_active=True)
+
+    # Operator user
+    op_password = os.getenv("OP_PASSWORD")
+    user = User.create(
+        username="op",
+        email="op@163.com",
+        password=op_password,
+        is_active=True,
+    )
     UserRole.create(user_id=user.id, role_id=3)
     yield f"Admin {user.username} created"
+
+    # Editor user
+    editor_password = os.getenv("EDITOR_PASSWORD")
     user = User.create(
-        username="editor", email="editor@163.com", password="editor", is_active=True
+        username="editor",
+        email="editor@163.com",
+        password=editor_password,
+        is_active=True,
     )
     UserRole.create(user_id=user.id, role_id=2)
     yield f"Admin {user.username} created"
+
 
 
 """
@@ -498,7 +552,8 @@ def create_orders(how_many=10):
 def create_fake_order(discounts):
     user = User.query.order_by(func.random()).first()
     address = create_fake_address()
-    status = random.choice(list(OrderStatusKinds)).value
+    #task 4.2 -FIX 21
+    status = secrets.choice(list(OrderStatusKinds)).value
     order_data = {
         "user_id": user.id,
         "shipping_address": address.full_address,
@@ -515,7 +570,10 @@ def create_fake_order(discounts):
     )
 
     order = Order.create(**order_data)
-    lines = create_order_lines(order, discounts, random.randrange(1, 5))
+    number_of_lines = secrets.randbelow(4) + 1
+    #lines = create_order_lines(order, discounts, random.randrange(1, 5))
+    #task 4.2 -FIX 22
+    lines = create_order_lines(order, discounts, number_of_lines)
     order.total_net = sum([line.get_total() for line in lines])
     order.save()
     create_payment(order)
@@ -532,7 +590,9 @@ def create_order_lines(order, discounts, how_many=10):
 def create_order_line(order, discounts):
     product = Product.query.order_by(func.random()).first()
     variant = product.variant[0]
-    quantity = random.randrange(1, 5)
+    #quantity = random.randrange(1, 5)
+    #task 4.2 Fix 23
+    quantity = secrets.randbelow(4) + 1
     variant.quantity += quantity
     variant.save()
     return OrderLine.create(
@@ -549,7 +609,8 @@ def create_order_line(order, discounts):
 
 # step27
 def create_payment(order):
-    status = random.choice(list(PaymentStatusKinds)).value
+    #Task 4.2 -FIX 24
+    status = secrets.choice(list(PaymentStatusKinds)).value
     payment = OrderPayment.create(
         order_id=order.id,
         status=status,
@@ -577,7 +638,9 @@ def create_fake_sale():
     sale = Sale.create(
         title=f"Happy {fake.word()} day!",
         discount_value_type=DiscountValueTypeKinds.percent.value,
-        discount_value=random.choice([10, 20, 30, 40, 50]),
+        #Task 4.2 -FIX 25
+        #discount_value=random.choice([10, 20, 30, 40, 50]),
+        discount_value=secrets.choice([10, 20, 30, 40, 50]),
     )
     for product in Product.query.order_by(func.random()).all()[:4]:
         SaleProduct.create(sale_id=sale.id, product_id=product.id)

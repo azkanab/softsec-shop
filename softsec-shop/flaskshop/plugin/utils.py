@@ -1,5 +1,7 @@
 from flask import current_app
-from markupsafe import Markup
+#from markupsafe import Markup
+#TASK 4.2 -FIX 11
+from markupsafe import escape
 
 
 class TemplateEventResult(list):
@@ -34,7 +36,13 @@ def template_hook(name, silent=True, is_markup=True, **kwargs):
             return ""
         raise
 
-    if is_markup:
-        return Markup(result)
+    # if is_markup:
+    #     return Markup(result)
 
+    # return result
+
+    #TASK 4.2 -FIX 11
+    if is_markup:
+        return escape(result)
     return result
+
