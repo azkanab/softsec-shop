@@ -41,8 +41,7 @@ def template_hook(name, silent=True, is_markup=True, **kwargs):
 
     # return result
 
-#TASK 4.2 -FIX 11
-def some_function(result, is_markup=True):
+    #TASK 4.2 -FIX 11
     if is_markup:
         return escape(result)
     return result

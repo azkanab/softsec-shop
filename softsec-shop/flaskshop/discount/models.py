@@ -58,7 +58,7 @@ class Voucher(Model):
         # task 1.4 Logical check to ensure code is unique before returning
         while True:
             # Task 4.2. - Fix 9
-            code = "".join(secrets.choice(string.ascii_uppercase, k=16))
+            code = "".join(secrets.choice(string.ascii_uppercase) for _ in range(16))
             exist = cls.query.filter_by(code=code).first()
             if not exist:
                 return code
