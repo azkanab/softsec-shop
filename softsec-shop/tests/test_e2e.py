@@ -3,14 +3,14 @@ import pytest
 
 def is_success_res(client, path):
     rv = client.get(path)
-    assert rv.status_code == 200
+    assert rv.status_code == 200  # nosec B101
 
 
 @pytest.mark.usefixtures("db")
 class TestBasicPageCanView:
     def test_404(self, client):
         rv = client.get("/404notfound")
-        assert rv.status_code == 404
+        assert rv.status_code == 404  # nosec B101
 
     def test_homepage(self, client):
         is_success_res(client, "/")
