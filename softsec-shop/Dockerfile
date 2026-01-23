@@ -3,8 +3,7 @@ FROM python:3.10
 
 # task 2.5 fix
 # create new user to prevent root error.
-ARG HOST_UID=1000
-RUN useradd -u ${HOST_UID} -ms /bin/bash appuser
+RUN useradd -ms /bin/bash appuser
 
 # Install Python dependencies
 WORKDIR /home/appuser/app
@@ -27,6 +26,7 @@ COPY flaskshop  flaskshop
 COPY app.py  app.py
 
 # Switch to non-root user for running the app
+USER appuser
 ENV HOME=/home/appuser
 WORKDIR /home/appuser/app 
 
