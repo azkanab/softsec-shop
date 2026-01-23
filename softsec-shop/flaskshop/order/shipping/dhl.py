@@ -46,7 +46,8 @@ def get_dhl_return_shipping_label(order):
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'dhl-api-key': DHL_API_KEY
+        'dhl-api-key': DHL_API_KEY,
+        'User-Agent': 'FlaskShop/1.0'
     }
     
     payload_json = json.dumps(payload)
