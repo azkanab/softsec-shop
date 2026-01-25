@@ -95,7 +95,7 @@ class SiteConfigForm(FlaskForm):
 class UserForm(FlaskForm):
     username = StringField(lazy_gettext("User Name"), validators=[DataRequired()])
     email = StringField(lazy_gettext("E-mail"), validators=[DataRequired()])
-    # Task 3.2 - Making sure that the password length reaches minimum of 8
+    # Task 3.2 (Azka) - Making sure that the password length reaches minimum of 8
     password = PasswordField(lazy_gettext("Password"), validators=[Length(min=8, max=64)])
     is_active = BooleanField(lazy_gettext("Is Active"))
     role = SelectField(
@@ -107,7 +107,7 @@ class UserForm(FlaskForm):
     updated_at = DateTimeField(lazy_gettext("Updated at"))
     submit = SubmitField(lazy_gettext("Submit"))
 
-    # Task 3.2 - Add checking if the input password is breached when changing passsword through dashboard
+    # Task 3.2 (Azka) - Add checking if the input password is breached when changing passsword through dashboard
     def validate(self, extra_validators=None):
         """Validate the form."""
         initial_validation = super(UserForm, self).validate(extra_validators)

@@ -40,7 +40,7 @@ def cart_index():
 #     response["total"] = "$" + str(cart.total)
 #     return jsonify(response)
 
-# task 1.2
+# task 1.2 (Hugo)
 def update_cartline(id):
     line = CartLine.get_by_id(id)
     cart = Cart.query.filter(Cart.user_id == current_user.id).first() 

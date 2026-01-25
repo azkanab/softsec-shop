@@ -29,7 +29,7 @@ class RegisterForm(FlaskForm):
         lazy_gettext("Email"),
         validators=[DataRequired(), Email(), Length(min=6, max=40)],
     )
-    # Task 3.2 - Add minimum length for password when registering account
+    # Task 3.2 (Azka) - Add minimum length for password when registering account
     password = PasswordField(
         lazy_gettext("Password"), validators=[DataRequired(), Length(min=15, max=64)]
     )
@@ -59,7 +59,7 @@ class RegisterForm(FlaskForm):
         if user:
             self.email.errors.append(lazy_gettext("Email already registered"))
             return False
-        # Task 3.2 - Check using pwned API if the input password has already been breached
+        # Task 3.2 (Azka) - Check using pwned API if the input password has already been breached
         if isPasswordBreached(self.password.data):
             self.password.errors.append(lazy_gettext("This password is already breached. Please choose another password!"))
             return False
@@ -95,7 +95,7 @@ class ResetPasswd(FlaskForm):
 
         return True
     
-# Task 3.2 - Form for force resetting password when there is data breach or the account is flagged for suspicious activity
+# Task 3.2 (Azka) - Form for force resetting password when there is data breach or the account is flagged for suspicious activity
 class ForceResetPasswdForm(FlaskForm):
     """Force Password Reset (if the account is suspected)"""
 

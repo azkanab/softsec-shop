@@ -74,7 +74,7 @@ def user_edit(user_id):
 
 user_del = wrap_partial(item_del, User)
 
-# Task 3.2 - API endpoint for reporting suspicious activity on particular user
+# Task 3.2 (Azka) - API endpoint for reporting suspicious activity on particular user
 def user_report(user_id):
     user = User.get_by_id(user_id)
     user.update(is_suspicious=True)
@@ -82,7 +82,7 @@ def user_report(user_id):
 
     return jsonify({"code": 0, "message": "User marked suspicious"})
 
-# Task 3.2 - API endpoint for reporting data breach on all users, so that later will be forced to reset password
+# Task 3.2 (Azka) - API endpoint for reporting data breach on all users, so that later will be forced to reset password
 def all_user_report():
     users = User.query.all()
 

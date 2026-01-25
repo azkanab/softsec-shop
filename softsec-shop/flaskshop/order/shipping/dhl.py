@@ -4,7 +4,7 @@ from flaskshop.utils import detect_postal_and_country
 
 from flask import current_app
 
-# Task 3.6. Requesting Return Shipping Label to DHL Service
+# Task 3.6. (Jessica) Requesting Return Shipping Label to DHL Service
 def get_dhl_return_shipping_label(order):
     DHL_API_KEY = current_app.config.get("DHL_API_KEY")
     DHL_API_URL = current_app.config.get("DHL_API_URL")
@@ -13,7 +13,7 @@ def get_dhl_return_shipping_label(order):
     
     address = order.shipping_address
 
-    # Task 3.6.: Build payload request
+    # Task 3.6. (Jessica): Build payload request
     if not address: # Fallback address
         shipper = {
             "name1": "Technische Universität Hamburg",
@@ -52,13 +52,13 @@ def get_dhl_return_shipping_label(order):
     
     payload_json = json.dumps(payload)
 
-    # Task 3.6. Send request to DHL
+    # Task 3.6. (Jessica) Send request to DHL
     response = requests.post(
         DHL_API_URL,
         headers=headers,
         data=payload_json,
         auth=(DHL_USERNAME, DHL_PASSWORD),
-        timeout=(3, 10), # Task 4.2. - Fix 10
+        timeout=(3, 10), # Task 4.2. (Azka) - Fix 10
     )
     response.raise_for_status()
     

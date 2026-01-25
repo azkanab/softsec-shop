@@ -246,7 +246,7 @@ def create_products_by_type(
             type_placeholders = placeholder_dir / schema["images_dir"]
             image_count = secrets.randbelow(4) + 1
             #create_product_images(product, random.randrange(1, 5), type_placeholders)
-            # TASK 4.2 -FIX 13
+            # TASK 4.2 (Jessica) - FIX 13
             create_product_images(product, image_count, type_placeholders)
         variant_combinations = schema["variant_titles"]
 

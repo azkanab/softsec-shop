@@ -37,7 +37,7 @@ TEST_PATH = "tests"
 @click.command()
 def test():
     """Run the tests."""
-    # Task 4.2. - Fix 5
+    # Task 4.2. (Azka) - Fix 5
     raise SystemExit(pytest.main([str(TEST_PATH)]))
 
 
@@ -61,7 +61,7 @@ def lint(fix_imports):
         arg.name for arg in chain(root_files, root_directories) if arg.name not in skip
     ]
 
-    # Task 4.2.: Fix 6
+    # Task 4.2. (Azka): Fix 6
 
     ALLOWED_TOOLS = {
         "isort",

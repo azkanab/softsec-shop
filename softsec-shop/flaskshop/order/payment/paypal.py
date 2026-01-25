@@ -24,7 +24,7 @@ from paypalserversdk.api_helper import ApiHelper
 
 paypal_client = None
 
-# Task 3.5 - Create Paypal Client using our Paypal Client ID and Paypal Client Secret API
+# Task 3.5 (Azka) - Create Paypal Client using our Paypal Client ID and Paypal Client Secret API
 def get_paypal_client():
     global paypal_client
     if paypal_client is None:
@@ -53,7 +53,7 @@ Create an order to start the transaction.
 @see https://developer.paypal.com/docs/api/orders/v2/#orders_create
 """
 
-# Task 3.5 Step 1 - Create order/payment in Paypal server by calling Paypal REST API
+# Task 3.5 (Azka) Step 1 - Create order/payment in Paypal server by calling Paypal REST API
 def create_order(total_amount):
     client = get_paypal_client()
     orders_controller = client.orders
@@ -97,7 +97,7 @@ def create_order(total_amount):
  @see https://developer.paypal.com/docs/api/orders/v2/#orders_capture
 """
 
-# Task 3.5 Step 2 - Finalize or capture order/payment in Paypal server by calling Paypal REST API
+# Task 3.5 (Azka) Step 2 - Finalize or capture order/payment in Paypal server by calling Paypal REST API
 def capture_order(payment_id):
     client = get_paypal_client()
     orders_controller = client.orders
@@ -124,7 +124,7 @@ def capture_order(payment_id):
             ApiHelper.json_serialize(e), status=500, mimetype="application/json"
         )
 
-# Task 3.6. Helper to get order
+# Task 3.6. (Azka) Helper to get order
 def get_order(payment_id):
     client = get_paypal_client()
     orders_controller = client.orders
@@ -152,7 +152,7 @@ def get_order(payment_id):
         )
 
 
-# Task 3.6. Helper to get capture_id
+# Task 3.6. (Azka) Helper to get capture_id
 def get_capture_id(payment_id):
     try:
         response = get_order(payment_id)
@@ -165,7 +165,7 @@ def get_capture_id(payment_id):
     except (KeyError, IndexError):
         return -1
 
-# Task 3.6. - Refund Order
+# Task 3.6. (Hugo) - Refund Order
 def refund_order(order_id, amount):
     """
     This function does two things:

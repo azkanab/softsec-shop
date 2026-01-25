@@ -36,7 +36,7 @@ class CRUDMixin:
         return commit and db.session.commit()
 
 
-# Task 2.4.a IDOR Vulnerability here
+# Task 2.4.a (Hugo) IDOR Vulnerability here
     @classmethod
     @cache(MC_KEY_GET_BY_ID.format("{cls.__name__}", "{record_id}"))
     def get_by_id(cls, record_id):

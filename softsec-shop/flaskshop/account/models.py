@@ -20,10 +20,10 @@ class User(Model, UserMixin):
     is_active = Column(db.Boolean(), default=False)
     open_id = Column(db.String(80), index=True)
     session_key = Column(db.String(80), index=True)
-    # Task 3.2 - Add suspicious flag
+    # Task 3.2 (Azka) - Add suspicious flag
     is_suspicious = Column(db.Boolean(), default=False)
 
-    # # --- 3.3 implement 2FA ---
+    # # --- 3.3 (Hugo) implement 2FA ---
     totp_secret = Column(db.String(16))  # to store the unique key
     is_2fa_enabled = Column(db.Boolean(), default=False)  # to track status of 2FA
 

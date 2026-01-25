@@ -1,7 +1,7 @@
 ### Build and install packages
 FROM python:3.10
 
-# task 2.5 fix
+# task 2.5 (Hugo) fix
 # create new user to prevent root error.
 RUN useradd -ms /bin/bash appuser
 

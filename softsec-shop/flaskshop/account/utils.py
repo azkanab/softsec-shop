@@ -106,16 +106,16 @@ class PhoneNumber(phonenumbers.PhoneNumber):
     def __hash__(self):
         return hash(self.__unicode__())
 
-# Task 3.2 - Helper to check if input password is breach using pwned API
+# Task 3.2 (Azka) - Helper to check if input password is breach using pwned API
 def isPasswordBreached(password):
-    # Task 4.2. - Fix 1
+    # Task 4.2. (Azka) - Fix 1
     encrypted_pwd = hashlib.sha1(
         password.encode("utf-8"),
         usedforsecurity=False
     ).hexdigest().upper()
     encrypted_prefix = encrypted_pwd[:5]
     encrypted_suffix = encrypted_pwd[5:]
-    # Task 4.2. - Fix 2
+    # Task 4.2. (Azka) - Fix 2
     response = requests.get(
         f'https://api.pwnedpasswords.com/range/{encrypted_prefix}',
         timeout=(2, 3)
@@ -173,7 +173,7 @@ def permission_required(permission):
 def admin_required(f):
     return permission_required(Permission.ADMINISTER)(f)
 
-# Task 4.2. - Fix 3
+# Task 4.2. (Azka) - Fix 3
 def gen_tmp_pwd(size=8, chars=string.ascii_uppercase + string.digits):
     # return "".join(random.choice(chars) for _ in range(size))
     return "".join(secrets.choice(chars) for _ in range(size))

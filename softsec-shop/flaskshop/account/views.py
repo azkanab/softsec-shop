@@ -26,7 +26,7 @@ def index():
     form = ChangePasswordForm(request.form)
     orders = Order.get_current_user_orders()
 
-    # task 3.3. Initialize the QR code data for the tab pane
+    # task 3.3. (Hugo) Initialize the QR code data for the tab pane
     qr_code_base64 = None
     secret = session.get('otp_secret')
     
@@ -91,7 +91,7 @@ def login():
         flash_errors(form)
     return render_template("account/login.html", form=form)
 
-# Task 3.2 - API for force reset password
+# Task 3.2 (Hugo) - API for force reset password
 def forceresetpwd():
     """Force Reset user password"""
     form = ForceResetPasswdForm(request.form)
@@ -160,7 +160,7 @@ def set_password():
         flash_errors(form)
     return redirect(url_for("account.index"))
 
-# # task3.3 draft
+# # task3.3 draft (Hugo)
 @login_required
 def enable_2fa():
     # Check if a secret already exists in the session (if they refresh the page)
@@ -243,7 +243,7 @@ def verify_2fa():
                 # Store the actual secret string under the permanent key!
                 session[f'2fa_enabled_{user.id}'] = secret_to_save
 
-                # Task 3.3 Update the database to save 2FA status
+                # Task 3.3 (Azka) Update the database to save 2FA status
                 user.update(
                     is_2fa_enabled=True
                 )
@@ -265,7 +265,7 @@ def verify_2fa():
     
     return render_template("account/verify_2fa.html", form=form)
 
-# task 2.4.a fix
+# task 2.4.a (Hugo) fix
 def view_profile(user_id):
     user = User.get_by_id(user_id)
     # Add the Access Control Check (The Mitigation)
@@ -288,7 +288,7 @@ def addresses():
     addresses = current_user.addresses
     return render_template("account/addresses.html", addresses=addresses)
 
-# Task 2.1. CSRF - Removing the @profile.exempt
+# Task 2.1. CSRF (Azka) - Removing the @profile.exempt
 def edit_address():
     """Create and edit an address."""
     form = AddressForm(request.form)
@@ -325,7 +325,7 @@ def delete_address(id):
         UserAddress.delete(user_address)
     return redirect(url_for("account.index") + "#addresses")
 
-# Task 3.2 - If a logged in account is flagged for being suspicious (is_suspicious = True), it must be redirected to forceresetpwd page
+# Task 3.2 (Azka) - If a logged in account is flagged for being suspicious (is_suspicious = True), it must be redirected to forceresetpwd page
 def check_suspicious_user():
     allowed_endpoints = ['account.forceresetpwd', 'account.logout', 'static']
 
@@ -341,7 +341,7 @@ def flaskshop_load_blueprints(app):
     bp.add_url_rule("/", view_func=index)
     bp.add_url_rule("/login", view_func=login, methods=["GET", "POST"])
     bp.add_url_rule("/resetpwd", view_func=resetpwd, methods=["GET", "POST"])
-    # Task 3.2 - New endpoint for force reset when user is suspicious
+    # Task 3.2 (Azka) - New endpoint for force reset when user is suspicious
     bp.add_url_rule("/forceresetpwd", view_func=forceresetpwd, methods=["GET", "POST"])
     bp.add_url_rule("/logout", view_func=logout)
     bp.add_url_rule("/signup", view_func=signup, methods=["GET", "POST"])
@@ -354,7 +354,7 @@ def flaskshop_load_blueprints(app):
     )
     bp.add_url_rule('/profile/<int:user_id>', view_func=view_profile)
 
-    # Task 3.2 - Check if the user is suspicious before going to every page, if it is, then it will be redirected to reset password
+    # Task 3.2 (Azka) - Check if the user is suspicious before going to every page, if it is, then it will be redirected to reset password
     app.before_request(check_suspicious_user)
 
     app.register_blueprint(bp, url_prefix="/account")

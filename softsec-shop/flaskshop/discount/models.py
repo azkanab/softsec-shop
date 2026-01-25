@@ -55,16 +55,16 @@ class Voucher(Model):
     
     @classmethod
     def generate_code(cls):
-        # task 1.4 Logical check to ensure code is unique before returning
+        # task 1.4 (Hugo) Logical check to ensure code is unique before returning
         while True:
-            # Task 4.2. - Fix 9
+            # Task 4.2. (Azka) - Fix 9
             code = "".join(secrets.choice(string.ascii_uppercase) for _ in range(16))
             exist = cls.query.filter_by(code=code).first()
             if not exist:
                 return code
 
     def check_available(self, cart=None):
-        # Task 1.5 Voucher Code Usage Limit
+        # Task 1.5 (Azka) Voucher Code Usage Limit
         self.check_available_by_usage_limit()
         self.check_available_by_date()
         if cart:

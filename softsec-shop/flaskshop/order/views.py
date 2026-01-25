@@ -70,14 +70,14 @@ def create_payment(token, payment_method):
             total=order.total,
             customer_ip_address=customer_ip_address,
         )
-    # Task 3.5 Step 1: Calling function in Paypal to call Paypal REST API
+    # Task 3.5 (Azka) Step 1: Calling function in Paypal to call Paypal REST API
     if payment_method == "paypal":
         response = paypal.create_order(order.total)
         response_json = response.get_data(as_text=True)
         success = response.status_code == 200
         if success:
             response_data = json.loads(response_json)
-            # Task 3.5 Step 1: Set payment_no in the database with the payment ID generated from Paypal REST API
+            # Task 3.5 (Azka) Step 1: Set payment_no in the database with the payment ID generated from Paypal REST API
             payment.set_payment_no(response_data["id"])
             payment.save()
             return response
@@ -94,13 +94,13 @@ def ali_pay(token):
     payment = create_payment(token, "alipay")
     return redirect(payment.redirect_url)
 
-# Task 3.5 Step 1: Our API proxy to eventually call Paypal REST API to create order/payment
+# Task 3.5 (Azka) Step 1: Our API proxy to eventually call Paypal REST API to create order/payment
 @login_required
 def paypal_pay(token):
     response = create_payment(token, "paypal")
     return response
 
-# Task 3.5 Step 2: Our API proxy to eventually call Paypal REST API to capture or finalize order/payment
+# Task 3.5 (Azka) Step 2: Our API proxy to eventually call Paypal REST API to capture or finalize order/payment
 def paypal_notify(payment_id):
     response = paypal.capture_order(payment_id)
     success = response.status_code == 200
@@ -169,7 +169,7 @@ def cancel_order(token, is_refund):
         flash(lazy_gettext("Your order has been cancelled"), "success")
     return render_template("orders/details.html", order=order)
 
-# Task 3.6. Decode base 64 from DHL response to a file
+# Task 3.6. (Jessica) Decode base 64 from DHL response to a file
 def decode_base_64(b64, type, order_token):
     
     shipping_label_dir = Path(current_app.static_folder) / "shipping_label"
@@ -189,26 +189,26 @@ def decode_base_64(b64, type, order_token):
     
     return f"/static/shipping_label/{filename}"
 
-# Task 3.6. Create a DHL Shipping Label for return an order and save it in folder /static/shipping_label
+# Task 3.6. (Jessica) Create a DHL Shipping Label for return an order and save it in folder /static/shipping_label
 def generate_shipping_label(order):
 
     response = dhl.get_dhl_return_shipping_label(order)
 
     data = response.json()
 
-    # Task 3.6. Processing PDF file
+    # Task 3.6. (Jessica) Processing PDF file
     pdf_url = None
     if "label" in data and "b64" in data["label"]:
         pdf_url = decode_base_64(data["label"]["b64"], "pdf", order.token)
     
-    # Task 3.6. Processing PNG File
+    # Task 3.6. (Jessica) Processing PNG File
     qr_png_url = None
     if "qrLabel" in data and "b64" in data["qrLabel"]:
         qr_png_url = decode_base_64(data["qrLabel"]["b64"], "png", order.token)
 
     return qr_png_url, pdf_url
 
-# Task 3.6. - TO DO: PayPal refund
+# Task 3.6. (Hugo) - TO DO: PayPal refund
 @login_required
 def paypal_refund(order):
     """
@@ -262,7 +262,7 @@ def handle_refund(token):
     customer_ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
     payment_no = str(int(time.time())) + str(current_user.id)
 
-    # Task 3.6. - Create new row for order_refund table
+    # Task 3.6. (Azka) - Create new row for order_refund table
     refund = OrderRefund.query.filter_by(order_id=order.id).first()
     if not refund:
         refund = OrderRefund.create(
@@ -274,7 +274,7 @@ def handle_refund(token):
             payment_no=payment_no
         )
 
-    # Task 3.6. - Handle refund process for each payment method
+    # Task 3.6. (Azka) - Handle refund process for each payment method
     refund_success = True
     if payment.payment_method == "paypal":
         refund_success = paypal_refund(order)
@@ -303,12 +303,12 @@ def cancel_return_order(token):
     if not order.is_self_order:
         abort(403, "This is not your order!")
 
-    # Task 3.6. - Set status in order_order table to canceled and status in order_event table to order_canceled
+    # Task 3.6. (Azka) - Set status in order_order table to canceled and status in order_event table to order_canceled
     order.cancel()
 
     shipping_qr_url, shipping_label_url = generate_shipping_label(order)
 
-    # Task 3.6. - Create a new row for OrderReturn
+    # Task 3.6. (Azka) - Create a new row for OrderReturn
     returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
     if not returnOrder:
         returnOrder = OrderReturn.create(
@@ -332,7 +332,7 @@ def send_return(token):
     if not order.is_self_order:
         abort(403, "This is not your order!")
 
-    # Task 3.6. - Update the status in order_return table
+    # Task 3.6. (Azka) - Update the status in order_return table
     returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
     if returnOrder:
         returnOrder.update(
@@ -372,7 +372,7 @@ def receive_return(token):
     if not order:
         abort(404, "Order not found")
 
-    # Task 3.6. - Update the status in order_return table
+    # Task 3.6. (Azka) - Update the status in order_return table
     returnOrder = OrderReturn.query.filter_by(order_id=order.id).first()
     if returnOrder:
         returnOrder.update(
@@ -418,7 +418,7 @@ def flaskshop_load_blueprints(app):
     bp.add_url_rule("/", view_func=index)
     bp.add_url_rule("/<string:token>", view_func=show)
     bp.add_url_rule("/pay/<string:token>/alipay", view_func=ali_pay)
-    # Task 3.5 Endpoints for step 1 & step 2 of Paypal Gateway
+    # Task 3.5 (Azka) Endpoints for step 1 & step 2 of Paypal Gateway
     bp.add_url_rule("/pay/<string:token>/paypal", view_func=paypal_pay, methods=["POST"])
     bp.add_url_rule("/paypal/gateway/<string:payment_id>/", view_func=paypal_notify, methods=["POST"])
     bp.add_url_rule("/alipay/notify", view_func=ali_notify, methods=["POST", "HEAD"])

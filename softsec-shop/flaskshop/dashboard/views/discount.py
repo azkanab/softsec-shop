@@ -29,7 +29,7 @@ def vouchers():
     }
     return render_template("dashboard/general_list.html", **context)
 
-# Task 1.4 No Duplicate Code
+# Task 1.4 (Azka) No Duplicate Code
 def should_generate_new_code(id, voucher, form):
     existing_voucher = Voucher.get_by_code(form.code.data)
     # Edit
@@ -56,7 +56,7 @@ def vouchers_manage(id=None):
     form.type_.choices = [(k.value, k.name) for k in VoucherTypeKinds]
 
     if form.validate_on_submit():
-        # Task 1.4 No Duplicate Code
+        # Task 1.4 (Azka) No Duplicate Code
         if should_generate_new_code(id, voucher, form):
             new_code = Voucher.generate_code()
             form.code.data = new_code

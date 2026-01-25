@@ -130,7 +130,7 @@ def flaskshop_load_blueprints(app):
         "/users/<user_id>/edit", view_func=user_edit, methods=["GET", "POST"]
     )
     bp.add_url_rule("/users/<int:id>/delete", view_func=user_del, methods=["DELETE"])
-    # Task 3.2 - Add API endpoint for the report and report data breach button
+    # Task 3.2 (Azka) - Add API endpoint for the report and report data breach button
     bp.add_url_rule("/users/<user_id>/report", view_func=user_report, methods=["PUT"])
     bp.add_url_rule("/users/report-all-users", view_func=all_user_report, methods=["PUT"])
     bp.add_url_rule(
