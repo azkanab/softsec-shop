@@ -235,14 +235,19 @@ def verify_2fa():
             # Successful validation: Now finalize the session based on the state
             if current_user.is_authenticated:
                 # ENROLLMENT: Set the permanent flag to the actual secret string
-                
+
                 # Retrieve the temporary secret we need to save permanently
                 secret_to_save = session.get('otp_secret')
-                
+
                 session.permanent = True
                 # Store the actual secret string under the permanent key!
-                session[f'2fa_enabled_{user.id}'] = secret_to_save 
-                
+                session[f'2fa_enabled_{user.id}'] = secret_to_save
+
+                # Task 3.3 Update the database to save 2FA status
+                user.update(
+                    is_2fa_enabled=True
+                )
+
                 # Clean up temporary secret
                 del session['otp_secret']
                 flash("2FA successfully enabled!", "success")

@@ -31,7 +31,7 @@ class RegisterForm(FlaskForm):
     )
     # Task 3.2 - Add minimum length for password when registering account
     password = PasswordField(
-        lazy_gettext("Password"), validators=[DataRequired(), Length(min=8, max=64)]
+        lazy_gettext("Password"), validators=[DataRequired(), Length(min=15, max=64)]
     )
     confirm = PasswordField(
         lazy_gettext("Verify password"),
@@ -99,7 +99,7 @@ class ResetPasswd(FlaskForm):
 class ForceResetPasswdForm(FlaskForm):
     """Force Password Reset (if the account is suspected)"""
 
-    new_password = PasswordField(lazy_gettext("New Password"), validators=[DataRequired(), Length(min=8, max=64)])
+    new_password = PasswordField(lazy_gettext("New Password"), validators=[DataRequired(), Length(max=64)])
     confirm_password = PasswordField(lazy_gettext("Confirm New Password"), validators=[DataRequired(), EqualTo("new_password", message=lazy_gettext("Passwords must match")),])
 
     def __init__(self, *args, **kwargs):
@@ -112,7 +112,13 @@ class ForceResetPasswdForm(FlaskForm):
         initial_validation = super(ForceResetPasswdForm, self).validate(extra_validators)
         if not initial_validation:
             return False
-        
+
+        # Task 3.2. Check minimum password length based on 2FA status
+        min_length = 8 if self.user.is_2fa_enabled else 15
+        if len(self.new_password.data) < min_length:
+            self.new_password.errors.append(lazy_gettext(f"Password must be at least {min_length} characters long."))
+            return False
+
         if self.user.check_password(self.new_password.data):
             self.new_password.errors.append(lazy_gettext("New password cannot be the same as old password. Please choose another password!"))
             return False
@@ -166,7 +172,7 @@ class ChangePasswordForm(FlaskForm):
         lazy_gettext("Old Password"), validators=[DataRequired()]
     )
     # Task 3.2 Add minimum length for password when changing password
-    password = PasswordField(lazy_gettext("Password"), validators=[DataRequired(), Length(min=8, max=64)])
+    password = PasswordField(lazy_gettext("Password"), validators=[DataRequired(), Length(max=64)])
     confirm = PasswordField(
         lazy_gettext("Verify password"),
         validators=[
@@ -186,10 +192,16 @@ class ChangePasswordForm(FlaskForm):
         if not initial_validation:
             return False
 
+        # Task 3.2. Check minimum password length based on 2FA status
+        min_length = 8 if self.user.is_2fa_enabled else 15
+        if len(self.password.data) < min_length:
+            self.password.errors.append(lazy_gettext(f"Password must be at least {min_length} characters long."))
+            return False
+
         if not self.user.check_password(self.old_password.data):
             self.old_password.errors.append(lazy_gettext("Invalid password"))
             return False
-        
+
         # Task 3.2 - Check using pwned API if the input password has already been breached
         if isPasswordBreached(self.password.data):
             self.password.errors.append(lazy_gettext("This password is already breached. Please choose another password!"))
