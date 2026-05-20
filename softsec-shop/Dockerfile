@@ -35,7 +35,6 @@ EXPOSE 5000
 
 # Make Flask CLI use your app module (app.py exposes app variable)
 ENV FLASK_APP=app
-ENV FLASK_ENV=development
+ENV FLASK_ENV=production
 
-#CMD ["flask", "run", "--host=0.0.0.0"]
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000", "--reload"]
+CMD ["gunicorn", "--bind=0.0.0.0:5000", "--workers=2", "--timeout=120", "app:app"]

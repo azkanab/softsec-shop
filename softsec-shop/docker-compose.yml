@@ -47,7 +47,7 @@ services:
       DB_URI: mysql+pymysql://root:root@db:3306/flaskshop?charset=utf8mb4
       REDIS_URI: redis://redis:6379
       ESEARCH_URI: http://elasticsearch:9200
-      FLASK_DEBUG: 1
+      FLASK_DEBUG: 0
     restart: unless-stopped
     env_file:
       - .env
