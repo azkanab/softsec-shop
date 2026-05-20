@@ -1,7 +1,7 @@
 # **Group 5 - Softsec-shop Setup Guide**
 
 *For full documentation, please refer to our Notion workspace:*
-**[Link to our Notion documentation](https://sponge-kitchen-adb.notion.site/Task-3-2-Password-Requirements-Azka-2afaaa8c79d7803999d0d8f9b659530b)**
+**[Link to our Notion documentation](https://sponge-kitchen-adb.notion.site/Secure-Software-Application-Project-Team-5-29daaa8c79d7806887c6f590ae937ee3)**
 
 ---
 This guide contains the full setup instructions for running **Softsec-shop**.
